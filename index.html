@@ -503,6 +503,13 @@
   .mp-mm-jogo.sem-resultado { border-left: 4px solid #e5e7eb; opacity: 0.7; }
 
 
+
+  /* ── MM time name coloring ── */
+  .mm-time-ok  { color: #16a34a; font-weight: 800; }
+  .mm-time-err { color: #dc2626; font-weight: 800; }
+  .mm-score-ok { color: #16a34a; font-weight: 800; background: #dcfce7; border-radius: 4px; padding: 1px 5px; }
+  .mm-pen-ok   { color: #16a34a; font-weight: 700; }
+
   /* ── MM card badge ── */
   .jogo-grupo.mm-fase {
     background: var(--amarelo); color: var(--verde-escuro);
@@ -558,6 +565,21 @@
   .mp-mm-pts.p-md { color:#854d0e; }
   .mp-mm-pen-row { margin-top:3px; font-size:10px; color:var(--muted); display:flex; gap:12px; }
 
+
+  /* ── Jogos toggle ── */
+  .jogos-toggle-row {
+    display: flex; gap: 8px; margin-bottom: 14px;
+  }
+  .jogos-toggle-btn {
+    font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 700;
+    padding: 7px 18px; border-radius: 20px; border: 2px solid var(--border);
+    background: #fff; color: var(--muted); cursor: pointer; transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .jogos-toggle-btn.active {
+    background: var(--verde-escuro); color: var(--amarelo); border-color: var(--verde-escuro);
+  }
+
   /* ===================== RESPONSIVE ===================== */
   @media (max-width: 640px) {
     .main { padding: 12px 12px; }
@@ -605,6 +627,10 @@
 
   <!-- JOGOS -->
   <div id="page-jogos" class="page active">
+    <div class="jogos-toggle-row">
+      <button class="jogos-toggle-btn active" id="toggle-grupos" onclick="setJogosView('grupos')">⚽ Fase de Grupos</button>
+      <button class="jogos-toggle-btn" id="toggle-matamata" onclick="setJogosView('matamata')">🏆 Mata-Mata</button>
+    </div>
     <div id="jogos-container"></div>
   </div>
 
@@ -734,7 +760,39 @@ const JOGOS = [
   {id:68,date:"2026-06-27",home:"Colômbia",away:"Portugal",group:"K"},
   {id:69,date:"2026-06-27",home:"RD Congo",away:"Uzbequistão",group:"K"},
   {id:70,date:"2026-06-27",home:"Argélia",away:"Áustria",group:"J"},
-  {id:71,date:"2026-06-27",home:"Jordânia",away:"Argentina",group:"J"}
+  {id:71,date:"2026-06-27",home:"Jordânia",away:"Argentina",group:"J"},
+  {id:73,date:"2026-06-28",home:"2A",away:"2B",group:"MM",city:"Los Angeles"},
+  {id:74,date:"2026-06-29",home:"1E",away:"3ABCDF",group:"MM",city:"Boston"},
+  {id:75,date:"2026-06-29",home:"1F",away:"2C",group:"MM",city:"Monterrey"},
+  {id:76,date:"2026-06-29",home:"1C",away:"2F",group:"MM",city:"Houston"},
+  {id:77,date:"2026-06-30",home:"1I",away:"3CDFGH",group:"MM",city:"Nova York"},
+  {id:78,date:"2026-06-30",home:"2E",away:"2I",group:"MM",city:"Dallas"},
+  {id:79,date:"2026-06-30",home:"1A",away:"3CEFHI",group:"MM",city:"Cidade do México"},
+  {id:80,date:"2026-07-01",home:"1L",away:"3EHIJK",group:"MM",city:"Atlanta"},
+  {id:81,date:"2026-07-01",home:"1D",away:"3BEFIJ",group:"MM",city:"Santa Clara"},
+  {id:82,date:"2026-07-01",home:"1G",away:"3AEHIJ",group:"MM",city:"Seattle"},
+  {id:83,date:"2026-07-02",home:"2K",away:"2L",group:"MM",city:"Toronto"},
+  {id:84,date:"2026-07-02",home:"1H",away:"2J",group:"MM",city:"Los Angeles"},
+  {id:85,date:"2026-07-02",home:"1B",away:"3EFGIJ",group:"MM",city:"Vancouver"},
+  {id:86,date:"2026-07-03",home:"1J",away:"2H",group:"MM",city:"Miami"},
+  {id:87,date:"2026-07-03",home:"1K",away:"3DEIJL",group:"MM",city:"Kansas City"},
+  {id:88,date:"2026-07-03",home:"2D",away:"2G",group:"MM",city:"Dallas"},
+  {id:89,date:"2026-07-04",home:"W74",away:"W77",group:"MM",city:"Filadélfia"},
+  {id:90,date:"2026-07-04",home:"W73",away:"W75",group:"MM",city:"Houston"},
+  {id:91,date:"2026-07-05",home:"W76",away:"W78",group:"MM",city:"Nova York"},
+  {id:92,date:"2026-07-05",home:"W79",away:"W80",group:"MM",city:"Cidade do México"},
+  {id:93,date:"2026-07-06",home:"W83",away:"W84",group:"MM",city:"Dallas"},
+  {id:94,date:"2026-07-06",home:"W81",away:"W82",group:"MM",city:"Seattle"},
+  {id:95,date:"2026-07-07",home:"W86",away:"W88",group:"MM",city:"Atlanta"},
+  {id:96,date:"2026-07-07",home:"W85",away:"W87",group:"MM",city:"Vancouver"},
+  {id:97,date:"2026-07-09",home:"W89",away:"W90",group:"MM",city:"Boston"},
+  {id:98,date:"2026-07-10",home:"W93",away:"W94",group:"MM",city:"Los Angeles"},
+  {id:99,date:"2026-07-12",home:"W91",away:"W92",group:"MM",city:"Miami"},
+  {id:100,date:"2026-07-12",home:"W95",away:"W96",group:"MM",city:"Kansas City"},
+  {id:101,date:"2026-07-14",home:"W97",away:"W98",group:"MM",city:"Dallas"},
+  {id:102,date:"2026-07-15",home:"W99",away:"W100",group:"MM",city:"Atlanta"},
+  {id:103,date:"2026-07-18",home:"RU101",away:"RU102",group:"MM",city:"Miami"},
+  {id:104,date:"2026-07-19",home:"W101",away:"W102",group:"MM",city:"Nova York"}
 ];
 
 const RODADA_RANGES = [[0,23],[24,47],[48,71]];
@@ -973,20 +1031,34 @@ function showPage(name, el) {
 function renderJogos() {
   const container = document.getElementById('jogos-container');
   const byDate = {};
-  JOGOS.forEach(j => { if (!byDate[j.date]) byDate[j.date] = []; byDate[j.date].push(j); });
+  const jogosFiltered = JOGOS.filter(j => jogosView === 'grupos' ? j.id < 73 : j.id >= 73);
+  jogosFiltered.forEach(j => { if (!byDate[j.date]) byDate[j.date] = []; byDate[j.date].push(j); });
 
-  document.getElementById('jogos-count').textContent = `${Object.keys(STATE.resultados).length}/72 jogos`;
+  const totalMM = Object.values(STATE.gabarito_mm).filter(g => g.golsA !== null).length;
+  const countLabel = jogosView === 'grupos'
+    ? `${Object.keys(STATE.resultados).length}/72 jogos`
+    : `${totalMM}/32 jogos MM`;
+  document.getElementById('jogos-count').textContent = countLabel;
 
   let html = ''; let lastRodada = null;
   Object.keys(byDate).sort().forEach(date => {
-    const rodada = getRodada(byDate[date][0].id);
+    const firstId = byDate[date][0].id;
+    const rodada = getRodada(firstId);
+    let faseLabel = '';
+    if (firstId >= 73 && firstId <= 88) faseLabel = '16 Avos de Final';
+    else if (firstId >= 89 && firstId <= 96) faseLabel = 'Oitavas de Final';
+    else if (firstId >= 97 && firstId <= 100) faseLabel = 'Quartas de Final';
+    else if (firstId >= 101 && firstId <= 102) faseLabel = 'Semifinais';
+    else if (firstId === 103) faseLabel = '3º Lugar';
+    else if (firstId === 104) faseLabel = 'Final';
+    const badgeLabel = firstId >= 73 ? faseLabel : `Rodada ${rodada}`;
     html += `<div class="day-block">
       <div class="day-header">
         <div class="day-label">${fmtDate(date)}</div>
         <div class="day-line"></div>
-        ${rodada !== lastRodada ? `<div class="rodada-badge">Rodada ${rodada}</div>` : ''}
+        ${(firstId >= 73 ? faseLabel !== lastRodada : rodada !== lastRodada) ? `<div class="rodada-badge">${badgeLabel}</div>` : ''}
       </div>`;
-    lastRodada = rodada;
+    lastRodada = firstId >= 73 ? faseLabel : rodada;
     byDate[date].forEach(j => {
       const res = getResultado(j.id);
       const hf = flag(j.home), af = flag(j.away);
@@ -1586,7 +1658,39 @@ const SCHEDULE_MAP = {
   60:{hora:"16h",canais:[]},61:{hora:"16h",canais:[]},62:{hora:"21h",canais:[]},
   63:{hora:"21h",canais:[]},64:{hora:"0h",canais:[]},65:{hora:"0h",canais:[]},
   66:{hora:"18h",canais:[]},67:{hora:"18h",canais:[]},68:{hora:"20h30",canais:[]},
-  69:{hora:"20h30",canais:[]},70:{hora:"23h",canais:[]},71:{hora:"23h",canais:[]}
+  69:{hora:"20h30",canais:[]},70:{hora:"23h",canais:[]},71:{hora:"23h",canais:[]},
+  73:{hora:"16avos",data:"28/jun",city:"Los Angeles",canais:[]},
+  74:{hora:"16avos",data:"29/jun",city:"Boston",canais:[]},
+  75:{hora:"16avos",data:"29/jun",city:"Monterrey",canais:[]},
+  76:{hora:"16avos",data:"29/jun",city:"Houston",canais:[]},
+  77:{hora:"16avos",data:"30/jun",city:"Nova York",canais:[]},
+  78:{hora:"16avos",data:"30/jun",city:"Dallas",canais:[]},
+  79:{hora:"16avos",data:"30/jun",city:"Cidade do México",canais:[]},
+  80:{hora:"16avos",data:"01/jul",city:"Atlanta",canais:[]},
+  81:{hora:"16avos",data:"01/jul",city:"Santa Clara",canais:[]},
+  82:{hora:"16avos",data:"01/jul",city:"Seattle",canais:[]},
+  83:{hora:"16avos",data:"02/jul",city:"Toronto",canais:[]},
+  84:{hora:"16avos",data:"02/jul",city:"Los Angeles",canais:[]},
+  85:{hora:"16avos",data:"02/jul",city:"Vancouver",canais:[]},
+  86:{hora:"16avos",data:"03/jul",city:"Miami",canais:[]},
+  87:{hora:"16avos",data:"03/jul",city:"Kansas City",canais:[]},
+  88:{hora:"16avos",data:"03/jul",city:"Dallas",canais:[]},
+  89:{hora:"Oitavas",data:"04/jul",city:"Filadélfia",canais:[]},
+  90:{hora:"Oitavas",data:"04/jul",city:"Houston",canais:[]},
+  91:{hora:"Oitavas",data:"05/jul",city:"Nova York",canais:[]},
+  92:{hora:"Oitavas",data:"05/jul",city:"Cidade do México",canais:[]},
+  93:{hora:"Oitavas",data:"06/jul",city:"Dallas",canais:[]},
+  94:{hora:"Oitavas",data:"06/jul",city:"Seattle",canais:[]},
+  95:{hora:"Oitavas",data:"07/jul",city:"Atlanta",canais:[]},
+  96:{hora:"Oitavas",data:"07/jul",city:"Vancouver",canais:[]},
+  97:{hora:"Quartas",data:"09/jul",city:"Boston",canais:[]},
+  98:{hora:"Quartas",data:"10/jul",city:"Los Angeles",canais:[]},
+  99:{hora:"Quartas",data:"12/jul",city:"Miami",canais:[]},
+  100:{hora:"Quartas",data:"12/jul",city:"Kansas City",canais:[]},
+  101:{hora:"Semi",data:"14/jul",city:"Dallas",canais:[]},
+  102:{hora:"Semi",data:"15/jul",city:"Atlanta",canais:[]},
+  103:{hora:"3º Lugar",data:"18/jul",city:"Miami",canais:[]},
+  104:{hora:"Final",data:"19/jul",city:"Nova York",canais:[]}
 };
 
 // ============================================================
@@ -1629,13 +1733,27 @@ function toggleAccordion(e, id) {
       }
       const tA = palp ? palp.timeA : '—';
       const tB = palp ? palp.timeB : '—';
+      const hasGab = gabMM && gabMM.golsA !== null;
+      // Who actually won?
+      const winnerMM = hasGab ? (gabMM.penaltisA !== null
+        ? (gabMM.penaltisA > gabMM.penaltisB ? gabMM.timeA : gabMM.timeB)
+        : (gabMM.golsA > gabMM.golsB ? gabMM.timeA : gabMM.timeB)) : null;
+      // Team coloring
+      const tAcls = !hasGab || !palp ? '' : (palp.timeA === winnerMM ? 'mm-time-ok' : 'mm-time-err');
+      const tBcls = !hasGab || !palp ? '' : (palp.timeB === winnerMM ? 'mm-time-ok' : 'mm-time-err');
+      // Score coloring: green if placar matches
+      const scoreMatch = hasGab && palp && palp.golsA === gabMM.golsA && palp.golsB === gabMM.golsB;
+      const scoreCls = scoreMatch ? 'mm-score-ok' : `acc-mm-score ${cls}`;
       const scoreStr = palp ? `${palp.golsA}–${palp.golsB}` : '—';
-      const penStr = palp && palp.penaltisA !== null ? `pen ${palp.penaltisA}–${palp.penaltisB}` : '';
+      // Pen coloring
+      const penMatch = hasGab && palp && gabMM.penaltisA !== null && palp.penaltisA === gabMM.penaltisA && palp.penaltisB === gabMM.penaltisB;
+      const penStr = palp && palp.penaltisA !== null
+        ? `<span class="${penMatch ? 'mm-pen-ok' : ''}">pen ${palp.penaltisA}–${palp.penaltisB}</span>` : '';
       html += `<div class="acc-mm-item ${cls}">
         <span class="acc-mm-nome">${n.split(' ')[0]}</span>
-        <span class="acc-mm-times">${flag(tA)} ${tA} × ${flag(tB)} ${tB}</span>
-        <span class="acc-mm-score ${cls}">${scoreStr}</span>
-        <span class="acc-mm-pen">${penStr}</span>
+        <span class="acc-mm-times"><span class="${tAcls}">${flag(tA)} ${tA}</span> × <span class="${tBcls}">${flag(tB)} ${tB}</span></span>
+        <span class="${scoreCls}">${scoreStr}</span>
+        ${penStr}
         <span class="acc-mm-pts">${pts !== null ? (pts > 0 ? '+'+pts : '0') : ''}</span>
       </div>`;
     });
@@ -1704,10 +1822,22 @@ async function saveAccordionImage(id) {
   }
 }
 
+
+// ============================================================
+// JOGOS VIEW TOGGLE
+// ============================================================
+function setJogosView(view) {
+  jogosView = view;
+  document.getElementById('toggle-grupos').classList.toggle('active', view === 'grupos');
+  document.getElementById('toggle-matamata').classList.toggle('active', view === 'matamata');
+  renderJogos();
+}
+
 // ============================================================
 // MEUS PALPITES
 // ============================================================
 let mpSelectedName = null;
+let jogosView = 'grupos'; // 'grupos' or 'matamata'
 
 function renderMeusPalpites() {
   const container = document.getElementById('meuspalpites-container');
@@ -1804,24 +1934,37 @@ function renderMeusPalpites() {
         const hasRes = gab && gab.golsA !== null;
         let cls = hasRes ? (pts >= 8 ? 'exato' : pts > 0 ? 'certo' : 'errado') : 'sem-resultado';
         const tA = palp.timeA || '—', tB = palp.timeB || '—';
-        // Palpite score
-        const palp_pen = palp.penaltisA !== null ? `<span class="mp-mm-pen-label">pen ${palp.penaltisA}–${palp.penaltisB}</span>` : '';
+        // Who actually won?
+        const winnerMP = hasRes ? (gab.penaltisA !== null
+          ? (gab.penaltisA > gab.penaltisB ? gab.timeA : gab.timeB)
+          : (gab.golsA > gab.golsB ? gab.timeA : gab.timeB)) : null;
+        const tAcls = !hasRes ? '' : (palp.timeA === winnerMP ? 'mm-time-ok' : 'mm-time-err');
+        const tBcls = !hasRes ? '' : (palp.timeB === winnerMP ? 'mm-time-ok' : 'mm-time-err');
+        // Score coloring
+        const scoreMatchMP = hasRes && palp.golsA === gab.golsA && palp.golsB === gab.golsB;
+        const scoreMPcls = scoreMatchMP ? 'mm-score-ok' : `mp-mm-palp ${cls}`;
+        // Pen coloring
+        const penMatchMP = hasRes && gab.penaltisA !== null && palp.penaltisA === gab.penaltisA && palp.penaltisB === gab.penaltisB;
         // Real score
         let resMain = hasRes ? `${gab.golsA}–${gab.golsB}` : 'a jogar';
         let resPen = hasRes && gab.penaltisA !== null ? `pen ${gab.penaltisA}–${gab.penaltisB}` : '';
         const ptsCls = pts === null ? '' : pts >= 8 ? 'p-hi' : pts > 0 ? 'p-md' : '';
         html += `<div class="mp-mm-jogo ${cls}">
           <div class="mp-mm-top">
-            <span class="mp-mm-match">${flag(tA)} ${tA} <span style="color:var(--muted);font-weight:400">×</span> ${flag(tB)} ${tB}</span>
+            <span class="mp-mm-match">
+              <span class="${tAcls}">${flag(tA)} ${tA}</span>
+              <span style="color:var(--muted);font-weight:400"> × </span>
+              <span class="${tBcls}">${flag(tB)} ${tB}</span>
+            </span>
             <div class="mp-mm-scores">
-              <span class="mp-mm-palp ${cls}">${palp.golsA}–${palp.golsB}</span>
+              <span class="${scoreMPcls}">${palp.golsA}–${palp.golsB}</span>
               <span class="mp-mm-vs">vs</span>
               <span class="mp-mm-real">${resMain}</span>
               ${pts !== null ? `<span class="mp-mm-pts ${ptsCls}">${pts > 0 ? '+'+pts : '0'}</span>` : ''}
             </div>
           </div>
           ${(palp.penaltisA !== null || resPen) ? `<div class="mp-mm-pen-row">
-            ${palp.penaltisA !== null ? `<span>🎯 Palpite pen: ${palp.penaltisA}–${palp.penaltisB}</span>` : ''}
+            ${palp.penaltisA !== null ? `<span class="${penMatchMP ? 'mm-pen-ok' : ''}">🎯 Palpite pen: ${palp.penaltisA}–${palp.penaltisB}</span>` : ''}
             ${resPen ? `<span>✅ Real pen: ${resPen}</span>` : ''}
           </div>` : ''}
         </div>`;
