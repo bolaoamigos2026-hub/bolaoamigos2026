@@ -255,6 +255,12 @@
     white-space: nowrap;
   }
   table.palpites th.jogo-col { text-align: left; min-width: 180px; }
+  table.palpites th.jogo-col,
+  table.palpites td.jogo-col {
+    position: sticky; left: 0; z-index: 2;
+    background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.07);
+  }
+  table.palpites thead th.jogo-col { background: var(--verde-escuro); z-index: 3; }
   table.palpites td { padding: 7px 8px; border-bottom: 1px solid #f0f4ec; text-align: center; white-space: nowrap; }
   table.palpites td.jogo-col { text-align: left; font-weight: 600; font-size: 12px; color: var(--texto); padding-left: 12px; }
   table.palpites tr:last-child td { border-bottom: none; }
@@ -579,6 +585,42 @@
   .jogos-toggle-btn.active {
     background: var(--verde-escuro); color: var(--amarelo); border-color: var(--verde-escuro);
   }
+
+
+  /* ── MP view toggle ── */
+  .mp-view-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+  .mp-view-btn {
+    font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 700;
+    padding: 7px 18px; border-radius: 20px; border: 2px solid var(--border);
+    background: #fff; color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .mp-view-btn.active { background: var(--verde-escuro); color: var(--amarelo); border-color: var(--verde-escuro); }
+  /* ── MP bracket ── */
+  .mp-bracket-wrap { overflow-x: auto; padding-bottom: 12px; }
+  .mp-bracket {
+    display: flex; gap: 0; min-width: max-content;
+  }
+  .mp-bracket-col { display: flex; flex-direction: column; justify-content: space-around; min-width: 160px; padding: 0 8px; }
+  .mp-bracket-col-title {
+    font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 700;
+    color: var(--verde-campo); text-transform: uppercase; letter-spacing: 0.5px;
+    text-align: center; margin-bottom: 8px; padding-bottom: 4px;
+    border-bottom: 2px solid var(--border);
+  }
+  .mp-bracket-slot {
+    background: #fff; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 7px 10px; margin: 4px 0; font-size: 12px; font-weight: 600;
+    color: var(--texto); box-shadow: var(--shadow); min-height: 36px;
+    display: flex; align-items: center; gap: 6px; position: relative;
+  }
+  .mp-bracket-slot.winner { border-color: #16a34a; background: #f0fdf4; }
+  .mp-bracket-slot.loser  { border-color: #e5e7eb; color: #aaa; }
+  .mp-bracket-slot.pending { border-color: #e5e7eb; color: #bbb; font-style: italic; }
+  .mp-bracket-score {
+    font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 700;
+    color: var(--verde-escuro); margin-left: auto; white-space: nowrap;
+  }
+  .mp-bracket-pen { font-size: 10px; color: var(--muted); margin-left: 4px; }
 
   /* ===================== RESPONSIVE ===================== */
   @media (max-width: 640px) {
@@ -1076,27 +1118,31 @@ function renderJogos() {
         else if (j.id === 103) mmFase = '3º Lugar';
         else mmFase = 'Final';
       }
-      const resDisp = isMM ? resMM : res;
       const badgeLabel = isMM ? mmFase : ((SCHEDULE_MAP[j.id]||{}).hora||'G'+j.group);
       const badgeCls = isMM ? 'mm-fase' : '';
+      // For MM: use real team names from gabarito_mm if available
+      const gabInfo = isMM ? (STATE.gabarito_mm[j.id] || null) : null;
+      const dispHome = isMM ? (gabInfo ? gabInfo.timeA : j.home) : j.home;
+      const dispAway = isMM ? (gabInfo ? gabInfo.timeB : j.away) : j.away;
+      const dhf = flag(dispHome), daf = flag(dispAway);
       let resultHtml = '';
-      if (resDisp) {
-        const s = isMM ? resDisp : {golsA:resDisp[0],golsB:resDisp[1],penaltisA:null,penaltisB:null};
-        const pen = s.penaltisA !== null ? `<div class="mm-result-pen">pen ${s.penaltisA}–${s.penaltisB}</div>` : '';
-        resultHtml = `<div class="mm-result-display"><div class="mm-result-placar">${s.golsA} × ${s.golsB}</div>${pen}</div>`;
+      if (isMM && gabInfo && gabInfo.golsA !== null) {
+        const pen = gabInfo.penaltisA !== null ? `<div class="mm-result-pen">pen ${gabInfo.penaltisA}–${gabInfo.penaltisB}</div>` : '';
+        resultHtml = `<div class="mm-result-display"><div class="mm-result-placar">${gabInfo.golsA} × ${gabInfo.golsB}</div>${pen}</div>`;
+      } else if (!isMM && res) {
+        resultHtml = `<div class="mm-result-display"><div class="mm-result-placar">${res[0]} × ${res[1]}</div></div>`;
       } else {
-        const tA = isMM ? (j.home.startsWith('1')||j.home.startsWith('2')||j.home.startsWith('3')||j.home.includes('Vencedor') ? '' : j.home) : j.home;
         resultHtml = `<span class="visitor-pending">a jogar</span>`;
       }
       html += `<div class="jogo-card" id="jogo-card-${j.id}">
           <span class="jogo-num">#${j.id+1}</span>
           <span class="jogo-grupo ${badgeCls}">${badgeLabel}</span>
           <div class="jogo-times">
-            <span class="time-flag">${hf}</span>
-            <span class="time-nome left">${j.home}</span>
+            <span class="time-flag">${dhf}</span>
+            <span class="time-nome left">${dispHome}</span>
             ${resultHtml}
-            <span class="time-nome right">${j.away}</span>
-            <span class="time-flag">${af}</span>
+            <span class="time-nome right">${dispAway}</span>
+            <span class="time-flag">${daf}</span>
           </div>
           <button class="accordion-btn" onclick="toggleAccordion(event,${j.id})" title="Ver palpites">▾</button>
         </div>
@@ -1836,19 +1882,95 @@ function setJogosView(view) {
 // ============================================================
 // MEUS PALPITES
 // ============================================================
+// ============================================================
+// MEUS PALPITES · BRACKET
+// ============================================================
+function renderMpBracket(name) {
+  const palps = PALPITES_MM[name] || [];
+  const byId = {};
+  palps.forEach(p => { byId[p.id] = p; });
+
+  const FASES = [
+    {label:'16 Avos',  ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+    {label:'Oitavas',  ids:[89,90,91,92,93,94,95,96]},
+    {label:'Quartas',  ids:[97,98,99,100]},
+    {label:'Semifinais',ids:[101,102]},
+    {label:'Final',    ids:[104]},
+  ];
+
+  // Helper: who won in participant's bracket
+  function getWinner(p) {
+    if (!p) return null;
+    if (p.penaltisA !== null) return p.penaltisA > p.penaltisB ? p.timeA : p.timeB;
+    return p.golsA > p.golsB ? p.timeA : p.timeB;
+  }
+  // Helper: render single bracket slot
+  function slot(p, isThird) {
+    if (!p) return `<div class="mp-bracket-slot pending">A definir</div>`;
+    const winner = getWinner(p);
+    const gab = STATE.gabarito_mm[p.id];
+    const hasRes = gab && gab.golsA !== null;
+    const realWinner = hasRes ? (gab.penaltisA !== null
+      ? (gab.penaltisA > gab.penaltisB ? gab.timeA : gab.timeB)
+      : (gab.golsA > gab.golsB ? gab.timeA : gab.timeB)) : null;
+
+    const tAok = !hasRes ? '' : (p.timeA === realWinner ? 'mm-time-ok' : 'mm-time-err');
+    const tBok = !hasRes ? '' : (p.timeB === realWinner ? 'mm-time-ok' : 'mm-time-err');
+    const scoreMatch = hasRes && p.golsA === gab.golsA && p.golsB === gab.golsB;
+    const pen = p.penaltisA !== null ? `<span class="mp-bracket-pen">(${p.penaltisA}–${p.penaltisB})</span>` : '';
+
+    return `<div class="mp-bracket-slot">
+      <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="${tAok}">${flag(p.timeA)} ${p.timeA}</span>
+          <span class="mp-bracket-score ${scoreMatch?'mm-score-ok':''}">${p.golsA}–${p.golsB}${p.penaltisA!==null?' ('+p.penaltisA+'-'+p.penaltisB+' pen)':''}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span class="${tBok}">${flag(p.timeB)} ${p.timeB}</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  let html = `<div class="mp-bracket-wrap"><div class="mp-bracket">`;
+  FASES.forEach(fase => {
+    html += `<div class="mp-bracket-col">
+      <div class="mp-bracket-col-title">${fase.label}</div>`;
+    fase.ids.forEach(id => {
+      html += slot(byId[id]);
+    });
+    html += `</div>`;
+  });
+
+  // 3º lugar
+  html += `<div class="mp-bracket-col">
+    <div class="mp-bracket-col-title">3º Lugar</div>
+    ${slot(byId[103])}
+  </div>`;
+
+  html += `</div></div>`;
+  return html;
+}
+
+
 let mpSelectedName = null;
+let mpView = 'grupos'; // 'grupos' or 'matamata'
 let jogosView = 'grupos'; // 'grupos' or 'matamata'
 
 function renderMeusPalpites() {
   const container = document.getElementById('meuspalpites-container');
   if (!mpSelectedName) mpSelectedName = PARTICIPANTES[0];
 
-  // Name filter select
+  // Name filter select + view toggle
   let html = `<div class="mp-filter-row">
     <span class="mp-filter-label">Participante:</span>
     <select class="mp-name-select" onchange="setMpName(this.value)">
       ${PARTICIPANTES.map(n => `<option value="${n}" ${mpSelectedName===n?'selected':''}>${n}</option>`).join('')}
     </select>
+  </div>
+  <div class="mp-view-toggle">
+    <button class="mp-view-btn ${mpView==='grupos'?'active':''}" id="mp-btn-grupos" onclick="setMpView('grupos')">⚽ Grupos</button>
+    <button class="mp-view-btn ${mpView==='matamata'?'active':''}" id="mp-btn-matamata" onclick="setMpView('matamata')">🏆 Mata-Mata</button>
   </div>`;
 
   const name = mpSelectedName;
@@ -1877,6 +1999,7 @@ function renderMeusPalpites() {
     <div class="mp-stat-card"><div class="mp-stat-label">A jogar</div><div class="mp-stat-val">${pendentes}</div></div>
   </div>`;
 
+  if (mpView === 'grupos') {
   // Fase de grupos por rodada
   for (let r = 1; r <= 3; r++) {
     const range = RODADA_RANGES[r-1];
@@ -1911,68 +2034,19 @@ function renderMeusPalpites() {
       </div>`;
     });
   }
-
-  // MM section
-  const palpitesMM = PALPITES_MM[name] || [];
-  if (palpitesMM.length > 0) {
-    const FASES_MM = [
-      {label:'Oitavas de Final', ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
-      {label:'Quartas de Final', ids:[89,90,91,92,93,94,95,96]},
-      {label:'Semifinais',       ids:[97,98,99,100]},
-      {label:'3º Lugar',         ids:[103]},
-      {label:'Final',            ids:[104]}
-    ];
-    html += `<div class="mp-rodada-header" style="margin-top:20px">Mata-Mata <span style="font-size:11px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:500">${mmScore.jogos} jogos · ${mmScore.total} pts</span></div>`;
-    FASES_MM.forEach(fase => {
-      const faseJogos = fase.ids.map(id => palpitesMM.find(p=>p.id===id)).filter(Boolean);
-      if (faseJogos.length === 0) return;
-      const hasAny = fase.ids.some(id => { const g=STATE.gabarito_mm[id]; return g&&g.golsA!==null; });
-      html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">${fase.label}</div>`;
-      faseJogos.forEach(palp => {
-        const gab = STATE.gabarito_mm[palp.id];
-        const pts = calcMMScore(palp, gab);
-        const hasRes = gab && gab.golsA !== null;
-        let cls = hasRes ? (pts >= 8 ? 'exato' : pts > 0 ? 'certo' : 'errado') : 'sem-resultado';
-        const tA = palp.timeA || '—', tB = palp.timeB || '—';
-        // Who actually won?
-        const winnerMP = hasRes ? (gab.penaltisA !== null
-          ? (gab.penaltisA > gab.penaltisB ? gab.timeA : gab.timeB)
-          : (gab.golsA > gab.golsB ? gab.timeA : gab.timeB)) : null;
-        const tAcls = !hasRes ? '' : (palp.timeA === winnerMP ? 'mm-time-ok' : 'mm-time-err');
-        const tBcls = !hasRes ? '' : (palp.timeB === winnerMP ? 'mm-time-ok' : 'mm-time-err');
-        // Score coloring
-        const scoreMatchMP = hasRes && palp.golsA === gab.golsA && palp.golsB === gab.golsB;
-        const scoreMPcls = scoreMatchMP ? 'mm-score-ok' : `mp-mm-palp ${cls}`;
-        // Pen coloring
-        const penMatchMP = hasRes && gab.penaltisA !== null && palp.penaltisA === gab.penaltisA && palp.penaltisB === gab.penaltisB;
-        // Real score
-        let resMain = hasRes ? `${gab.golsA}–${gab.golsB}` : 'a jogar';
-        let resPen = hasRes && gab.penaltisA !== null ? `pen ${gab.penaltisA}–${gab.penaltisB}` : '';
-        const ptsCls = pts === null ? '' : pts >= 8 ? 'p-hi' : pts > 0 ? 'p-md' : '';
-        html += `<div class="mp-mm-jogo ${cls}">
-          <div class="mp-mm-top">
-            <span class="mp-mm-match">
-              <span class="${tAcls}">${flag(tA)} ${tA}</span>
-              <span style="color:var(--muted);font-weight:400"> × </span>
-              <span class="${tBcls}">${flag(tB)} ${tB}</span>
-            </span>
-            <div class="mp-mm-scores">
-              <span class="${scoreMPcls}">${palp.golsA}–${palp.golsB}</span>
-              <span class="mp-mm-vs">vs</span>
-              <span class="mp-mm-real">${resMain}</span>
-              ${pts !== null ? `<span class="mp-mm-pts ${ptsCls}">${pts > 0 ? '+'+pts : '0'}</span>` : ''}
-            </div>
-          </div>
-          ${(palp.penaltisA !== null || resPen) ? `<div class="mp-mm-pen-row">
-            ${palp.penaltisA !== null ? `<span class="${penMatchMP ? 'mm-pen-ok' : ''}">🎯 Palpite pen: ${palp.penaltisA}–${palp.penaltisB}</span>` : ''}
-            ${resPen ? `<span>✅ Real pen: ${resPen}</span>` : ''}
-          </div>` : ''}
-        </div>`;
-      });
-    });
+  } else {
+    // ── Mata-Mata bracket view ──
+    html += renderMpBracket(name);
   }
 
   container.innerHTML = html;
+}
+
+function setMpView(view) {
+  mpView = view;
+  document.getElementById('mp-btn-grupos').classList.toggle('active', view === 'grupos');
+  document.getElementById('mp-btn-matamata').classList.toggle('active', view === 'matamata');
+  renderMeusPalpites();
 }
 
 function setMpName(name) {
@@ -1985,8 +2059,6 @@ function setMpName(name) {
 // ============================================================
 (async()=>{
   await loadState();
-// ── MOCK: gabarito MM = palpites do Eduardo (apenas para teste) ──
-STATE.gabarito_mm = {"73": {"timeA": "Coreia do Sul", "timeB": "Suíça", "golsA": 1, "golsB": 1, "penaltisA": 3, "penaltisB": 2}, "74": {"timeA": "Alemanha", "timeB": "Escócia", "golsA": 3, "golsB": 1, "penaltisA": null, "penaltisB": null}, "75": {"timeA": "Holanda", "timeB": "Marrocos", "golsA": 1, "golsB": 2, "penaltisA": null, "penaltisB": null}, "76": {"timeA": "Brasil", "timeB": "Japão", "golsA": 3, "golsB": 0, "penaltisA": null, "penaltisB": null}, "77": {"timeA": "França", "timeB": "Suécia", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "78": {"timeA": "Equador", "timeB": "Noruega", "golsA": 1, "golsB": 1, "penaltisA": 4, "penaltisB": 5}, "79": {"timeA": "México", "timeB": "Costa do Marfim", "golsA": 1, "golsB": 2, "penaltisA": null, "penaltisB": null}, "80": {"timeA": "Inglaterra", "timeB": "Uzbequistão", "golsA": 4, "golsB": 0, "penaltisA": null, "penaltisB": null}, "81": {"timeA": "Austrália", "timeB": "Canadá", "golsA": 0, "golsB": 0, "penaltisA": 3, "penaltisB": 2}, "82": {"timeA": "Egito", "timeB": "Jordânia", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "83": {"timeA": "Colômbia", "timeB": "Gana", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "84": {"timeA": "Uruguai", "timeB": "Áustria", "golsA": 3, "golsB": 1, "penaltisA": null, "penaltisB": null}, "85": {"timeA": "Bósnia", "timeB": "Bélgica", "golsA": 1, "golsB": 1, "penaltisA": 4, "penaltisB": 3}, "86": {"timeA": "Argentina", "timeB": "Espanha", "golsA": 1, "golsB": 2, "penaltisA": null, "penaltisB": null}, "87": {"timeA": "Portugal", "timeB": "Senegal", "golsA": 3, "golsB": 0, "penaltisA": null, "penaltisB": null}, "88": {"timeA": "Paraguai", "timeB": "Irã", "golsA": 0, "golsB": 1, "penaltisA": null, "penaltisB": null}, "89": {"timeA": "Alemanha", "timeB": "França", "golsA": 2, "golsB": 2, "penaltisA": 4, "penaltisB": 3}, "90": {"timeA": "Coreia do Sul", "timeB": "Marrocos", "golsA": 0, "golsB": 2, "penaltisA": null, "penaltisB": null}, "91": {"timeA": "Brasil", "timeB": "Noruega", "golsA": 2, "golsB": 1, "penaltisA": null, "penaltisB": null}, "92": {"timeA": "Costa do Marfim", "timeB": "Inglaterra", "golsA": 0, "golsB": 2, "penaltisA": null, "penaltisB": null}, "93": {"timeA": "Colômbia", "timeB": "Uruguai", "golsA": 0, "golsB": 2, "penaltisA": null, "penaltisB": null}, "94": {"timeA": "Austrália", "timeB": "Egito", "golsA": 1, "golsB": 1, "penaltisA": 3, "penaltisB": 4}, "95": {"timeA": "Espanha", "timeB": "Irã", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "96": {"timeA": "Bósnia", "timeB": "Portugal", "golsA": 1, "golsB": 3, "penaltisA": null, "penaltisB": null}, "97": {"timeA": "Alemanha", "timeB": "Marrocos", "golsA": 0, "golsB": 0, "penaltisA": 4, "penaltisB": 3}, "98": {"timeA": "Uruguai", "timeB": "Egito", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "99": {"timeA": "Brasil", "timeB": "Inglaterra", "golsA": 2, "golsB": 2, "penaltisA": 5, "penaltisB": 4}, "100": {"timeA": "Espanha", "timeB": "Portugal", "golsA": 1, "golsB": 1, "penaltisA": 3, "penaltisB": 4}, "101": {"timeA": "Alemanha", "timeB": "Uruguai", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "102": {"timeA": "Brasil", "timeB": "Portugal", "golsA": 2, "golsB": 0, "penaltisA": null, "penaltisB": null}, "103": {"timeA": "Uruguai", "timeB": "Portugal", "golsA": 1, "golsB": 2, "penaltisA": null, "penaltisB": null}, "104": {"timeA": "Alemanha", "timeB": "Brasil", "golsA": 0, "golsB": 2, "penaltisA": null, "penaltisB": null}};
 
   renderJogos();
   // Auto-refresh a cada 2 minutos
