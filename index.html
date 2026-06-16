@@ -246,8 +246,8 @@
   .filter-btn:hover, .filter-btn.active {
     background: var(--verde-escuro); color: var(--amarelo); border-color: var(--verde-escuro);
   }
-  .palpites-table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
-  table.palpites { width: 100%; border-collapse: collapse; background: #fff; font-size: 13px; border-radius: var(--radius); overflow: hidden; }
+  .palpites-table-wrap { overflow-x: auto; box-shadow: var(--shadow); -webkit-overflow-scrolling: touch; }
+  table.palpites { width: 100%; border-collapse: collapse; background: #fff; font-size: 13px; }
   table.palpites th {
     background: var(--verde-escuro); color: var(--amarelo);
     font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 11px;
@@ -1194,7 +1194,8 @@ function renderPalpites() {
   thHtml += '</tr>';
   thead.innerHTML = thHtml;
   let trHtml = '';
-  const jogosToShow = palpitesFilter==='todos' ? JOGOS : JOGOS.filter(j => getRodada(j.id)===parseInt(palpitesFilter));
+  const jogosGrupos = JOGOS.filter(j => j.id < 72);
+  const jogosToShow = palpitesFilter==='todos' ? jogosGrupos : jogosGrupos.filter(j => getRodada(j.id)===parseInt(palpitesFilter));
   jogosToShow.forEach(j => {
     const res = getResultado(j.id);
     trHtml += `<tr>
