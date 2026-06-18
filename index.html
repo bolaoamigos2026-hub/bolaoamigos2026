@@ -523,6 +523,7 @@
   .cc-clock { font-size: 10px; font-weight: 700; color: #dc2626; text-align: center; margin-top: 6px; }
   .cc-encerrado { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
   .cc-venue { font-size: 11px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f4ec; }
+  .visitor-result-display.live { background: #dc2626; animation: cc-pulse 1.4s infinite; }
   .cc-refresh-note { font-size: 11px; color: var(--muted); text-align: right; margin-bottom: 10px; }
 
   /* ===================== RESPONSIVE ===================== */
@@ -549,7 +550,7 @@
     <div class="header-emblem">⚽</div>
     <div class="header-titles">
       <h1>BOLÃO COPA 2026</h1>
-      <p>Copa Du MunDu · 14 participantes</p>
+      <p>14 participantes + CLAUDE IA</p>
     </div>
   </div>
   <div class="header-right">
@@ -634,7 +635,7 @@
 const PARTICIPANTES = ["Eduardo","Fernando","Ricardo","Caio","Guilherme","Abayomi","Matheus H.","Isabella","Melissa","Pato e Renata","Renato","Sandra","Selma","Claude","Alex"];
 
 let PALPITES = {"Eduardo":[[2,1],[3,1],[1,2],[1,1],[0,2],[2,2],[0,3],[2,0],[4,0],[2,2],[1,0],[2,1],[4,2],[1,2],[1,1],[2,0],[3,2],[0,3],[3,0],[1,0],[5,0],[2,2],[3,1],[0,4],[1,1],[2,2],[2,1],[1,1],[1,2],[1,2],[4,2],[0,3],[3,1],[3,1],[3,1],[0,2],[4,0],[0,1],[2,0],[0,0],[3,2],[4,1],[2,2],[1,0],[3,0],[2,1],[3,3],[3,0],[2,1],[3,0],[1,3],[3,0],[1,2],[1,1],[1,0],[2,1],[1,1],[1,3],[2,2],[1,1],[3,4],[2,0],[0,0],[2,1],[0,2],[2,0],[0,5],[0,1],[2,2],[0,1],[2,2],[1,2]],"Fernando":[[2,1],[3,1],[1,1],[1,3],[0,2],[3,1],[0,1],[1,1],[3,0],[2,2],[1,3],[1,1],[4,0],[2,0],[0,2],[1,1],[5,0],[1,3],[2,0],[0,0],[3,0],[1,1],[2,2],[1,3],[1,1],[1,1],[2,1],[2,1],[2,2],[1,3],[3,1],[1,2],[3,1],[3,1],[3,0],[0,2],[3,0],[2,0],[3,0],[0,2],[3,0],[4,0],[1,0],[1,1],[3,0],[3,0],[1,1],[3,1],[2,0],[0,0],[1,3],[2,1],[1,3],[2,2],[2,2],[2,3],[1,1],[1,2],[1,1],[2,0],[0,3],[2,2],[1,1],[1,3],[0,3],[2,1],[0,3],[2,0],[0,2],[0,1],[0,1],[1,3]],"Ricardo":[[2,0],[3,1],[2,2],[1,0],[2,2],[2,0],[0,2],[2,2],[6,0],[2,2],[0,1],[2,0],[4,0],[2,0],[0,1],[1,1],[2,1],[1,1],[3,1],[2,2],[3,0],[2,0],[3,0],[0,4],[0,2],[1,0],[2,0],[3,1],[1,0],[0,2],[5,0],[1,1],[2,0],[3,0],[2,0],[0,1],[3,0],[2,0],[2,0],[2,2],[3,0],[3,0],[0,2],[2,2],[5,0],[2,0],[0,2],[3,0],[2,0],[1,1],[0,3],[4,0],[0,2],[2,2],[1,1],[1,3],[2,1],[0,3],[0,2],[2,2],[0,3],[2,0],[2,2],[1,2],[0,2],[2,0],[0,4],[2,0],[2,3],[2,0],[1,0],[0,4]],"Caio":[[1,1],[2,0],[3,1],[2,1],[1,2],[2,1],[0,2],[2,1],[3,0],[2,1],[1,1],[2,0],[3,0],[2,1],[2,0],[1,0],[2,0],[0,2],[2,0],[1,1],[3,0],[2,1],[1,0],[0,1],[2,1],[2,0],[1,0],[1,2],[0,0],[0,2],[3,0],[1,0],[2,1],[2,0],[2,0],[0,2],[4,0],[3,0],[4,0],[1,2],[0,2],[3,0],[0,1],[0,0],[2,0],[3,1],[0,3],[1,0],[2,1],[1,0],[0,4],[3,0],[1,0],[2,1],[0,2],[0,3],[1,0],[0,2],[0,0],[0,1],[1,3],[0,1],[0,2],[1,2],[0,2],[2,0],[0,1],[2,2],[1,3],[0,2],[0,0],[1,3]],"Guilherme":[[2,0],[3,1],[2,0],[0,1],[0,1],[1,0],[0,1],[1,0],[4,0],[1,1],[0,1],[1,0],[3,0],[0,1],[0,2],[0,1],[3,0],[0,2],[2,0],[1,0],[2,0],[2,1],[1,0],[0,3],[0,0],[2,1],[1,2],[0,2],[1,1],[0,2],[3,0],[1,0],[2,0],[2,0],[4,0],[0,2],[2,0],[2,0],[2,0],[0,1],[2,0],[3,0],[1,1],[0,1],[3,0],[1,0],[0,2],[2,1],[1,0],[1,0],[0,1],[3,0],[0,1],[1,2],[0,3],[1,2],[2,0],[1,2],[1,1],[2,1],[1,2],[2,1],[0,1],[1,0],[0,2],[2,0],[0,3],[1,0],[1,2],[2,0],[1,2],[0,2]],"Abayomi":[[2,1],[1,1],[2,0],[2,2],[0,2],[2,1],[0,2],[1,2],[5,1],[2,2],[2,1],[1,1],[4,2],[1,1],[0,2],[2,0],[3,1],[0,2],[3,1],[0,0],[2,0],[3,2],[4,3],[0,2],[1,0],[2,0],[2,1],[2,2],[4,1],[1,2],[4,0],[1,1],[1,1],[3,3],[2,0],[0,1],[2,0],[2,0],[2,2],[0,2],[2,0],[4,1],[2,3],[1,2],[5,2],[3,1],[0,2],[3,0],[2,1],[1,1],[1,1],[3,0],[0,2],[1,2],[0,2],[1,3],[2,2],[1,2],[1,2],[3,0],[1,3],[2,0],[1,1],[1,2],[0,2],[2,1],[0,4],[1,1],[3,4],[3,3],[2,2],[0,3]],"Matheus H.":[[2,0],[1,1],[1,0],[2,1],[0,2],[2,1],[0,2],[1,2],[4,0],[2,1],[1,1],[3,1],[3,0],[2,0],[0,2],[1,1],[2,1],[0,3],[3,0],[2,0],[3,0],[2,1],[1,1],[0,1],[2,0],[2,1],[2,0],[2,1],[2,1],[1,2],[4,0],[1,1],[2,0],[2,1],[3,0],[0,2],[3,0],[3,1],[3,0],[1,2],[2,0],[3,0],[1,2],[0,1],[2,0],[2,0],[0,2],[2,1],[1,1],[2,0],[0,3],[2,0],[1,2],[1,1],[0,2],[1,2],[2,1],[0,3],[1,2],[1,0],[1,2],[2,0],[1,1],[1,2],[0,2],[1,1],[0,3],[2,1],[1,2],[1,1],[1,1],[0,3]],"Isabella":[[2,1],[2,2],[2,1],[2,1],[0,1],[3,1],[0,4],[2,1],[4,0],[3,2],[2,2],[2,0],[4,1],[2,1],[1,2],[2,1],[4,1],[0,2],[3,0],[0,0],[5,1],[2,1],[2,1],[0,3],[1,1],[2,0],[0,0],[2,2],[1,1],[2,3],[6,1],[0,0],[3,2],[4,1],[2,0],[1,3],[6,0],[2,1],[3,1],[1,2],[3,0],[4,0],[2,2],[0,0],[6,1],[2,1],[0,2],[2,0],[1,0],[1,1],[2,3],[4,0],[0,2],[0,2],[1,3],[1,3],[2,1],[0,2],[2,1],[2,2],[1,3],[2,0],[0,0],[1,3],[1,2],[2,1],[0,3],[1,2],[2,3],[1,1],[0,1],[1,4]],"Melissa":[[2,0],[1,0],[0,0],[0,3],[1,3],[3,1],[0,4],[0,1],[3,0],[2,2],[1,0],[0,1],[4,0],[0,0],[0,1],[2,1],[4,0],[1,3],[2,0],[1,0],[1,0],[0,0],[1,0],[0,2],[1,1],[1,0],[0,0],[2,0],[1,0],[0,3],[3,0],[0,0],[2,1],[3,1],[3,0],[1,1],[2,0],[2,0],[3,2],[0,0],[1,0],[4,0],[0,2],[1,2],[2,0],[3,2],[0,1],[3,0],[1,0],[1,1],[0,1],[4,0],[0,1],[0,0],[0,2],[2,2],[2,0],[0,1],[1,1],[2,1],[0,2],[0,0],[0,2],[0,0],[0,1],[1,0],[0,3],[0,0],[1,2],[0,1],[2,2],[0,4]],"Pato e Renata":[[2,1],[1,1],[1,0],[2,0],[0,2],[2,1],[0,2],[0,3],[4,0],[2,1],[1,1],[2,0],[5,0],[2,0],[0,3],[0,1],[3,0],[0,3],[4,1],[0,0],[4,0],[3,1],[1,1],[0,2],[0,0],[2,0],[1,0],[2,0],[2,1],[0,1],[5,0],[2,0],[3,2],[3,0],[2,0],[0,1],[4,0],[3,0],[3,0],[0,1],[3,1],[5,0],[3,1],[1,1],[3,0],[2,1],[0,3],[2,0],[2,0],[1,0],[1,3],[2,0],[2,1],[1,1],[0,1],[0,3],[2,2],[0,3],[2,0],[1,1],[1,3],[0,0],[0,1],[1,3],[0,2],[1,0],[0,4],[0,1],[0,2],[2,0],[2,2],[0,5]],"Renato":[[1,1],[2,1],[2,1],[1,1],[2,1],[2,1],[0,2],[1,3],[5,0],[2,1],[1,1],[3,1],[6,0],[2,1],[2,2],[2,1],[3,1],[2,0],[4,0],[2,1],[3,1],[1,1],[3,0],[0,5],[1,3],[4,1],[0,2],[2,2],[2,0],[0,3],[6,1],[1,1],[3,0],[2,3],[0,2],[1,2],[3,1],[2,0],[3,1],[0,3],[3,1],[5,0],[1,3],[2,2],[4,1],[1,1],[0,3],[3,0],[2,1],[1,2],[1,3],[4,0],[1,2],[2,1],[2,1],[1,1],[2,0],[1,3],[1,1],[3,1],[0,3],[2,0],[0,2],[1,2],[0,2],[2,1],[0,3],[2,1],[1,1],[2,1],[1,1],[0,4]],"Sandra":[[3,1],[2,2],[3,0],[1,2],[1,3],[4,1],[1,2],[2,2],[3,0],[3,1],[1,1],[2,1],[3,0],[2,1],[1,3],[1,1],[3,0],[2,2],[3,2],[2,2],[3,1],[4,1],[1,1],[0,2],[1,2],[3,1],[2,0],[3,1],[1,2],[2,2],[4,0],[1,2],[3,2],[4,1],[3,1],[0,2],[3,1],[3,0],[4,1],[2,2],[4,1],[4,1],[2,3],[2,2],[3,1],[4,1],[1,1],[3,0],[2,2],[2,2],[1,3],[2,2],[1,2],[2,2],[1,1],[2,3],[2,2],[2,2],[2,1],[2,1],[1,3],[2,2],[2,2],[3,3],[1,2],[1,2],[0,3],[2,2],[2,3],[1,2],[2,2],[1,3]],"Selma":[[1,1],[0,1],[2,2],[1,0],[0,3],[1,0],[1,1],[2,1],[5,1],[2,3],[2,2],[1,1],[3,0],[1,2],[0,2],[1,1],[4,1],[0,3],[1,0],[0,0],[4,0],[2,0],[3,0],[0,2],[2,2],[1,1],[2,0],[2,0],[1,1],[0,2],[3,0],[2,2],[3,1],[4,2],[3,0],[2,2],[3,0],[1,0],[3,1],[2,0],[3,1],[4,1],[2,2],[1,2],[3,1],[2,1],[1,1],[2,0],[2,2],[2,0],[1,1],[3,1],[0,2],[0,1],[0,0],[2,1],[0,0],[1,0],[0,0],[2,1],[1,2],[3,1],[1,2],[1,2],[1,2],[3,0],[0,3],[2,2],[1,1],[2,0],[1,1],[1,3]],"Claude":[[2,1],[2,1],[2,1],[2,1],[0,2],[3,1],[0,3],[1,2],[5,0],[2,1],[1,2],[2,1],[4,0],[2,0],[0,2],[1,0],[3,0],[0,3],[3,0],[1,1],[3,0],[2,1],[2,0],[0,3],[1,2],[2,0],[2,0],[2,1],[1,1],[0,2],[4,0],[1,1],[2,0],[3,0],[3,0],[0,2],[3,0],[2,0],[2,0],[0,2],[3,0],[4,0],[1,2],[1,1],[4,0],[3,0],[0,2],[3,0],[2,1],[2,0],[0,3],[3,0],[1,2],[1,2],[0,2],[1,3],[2,1],[0,3],[1,1],[2,1],[0,3],[2,0],[0,1],[0,2],[0,2],[2,0],[0,3],[1,2],[1,2],[2,1],[1,1],[null,null]],
-"Alex":[[0,0],[0,0],[2,0],[2,2],[0,3],[2,1],[0,2],[0,1],[3,0],[2,1],[1,1],[2,0],[4,0],[3,1],[2,2],[2,0],[3,0],[1,2],[3,0],[1,1],[4,0],[2,1],[1,0],[0,2],[2,1],[2,1],[2,1],[2,0],[1,3],[3,0],[0,0],[1,0],[2,0],[1,0],[3,1],[2,0],[3,0],[0,2],[2,0],[2,0],[1,1],[1,0],[2,0],[3,0],[0,2],[2,0],[1,1],[2,1],[0,2],[3,1],[1,2],[1,1],[0,2],[1,1],[1,2],[1,0],[1,2],[1,1],[0,2],[1,1],[1,2],[0,2],[2,0],[2,2],[0,0],[1,1],[1,1],[0,1],[0,3],[2,0],[0,1],[0,1]]};
+"Alex":[[0,0],[0,0],[2,0],[2,2],[0,3],[2,1],[0,2],[0,1],[3,0],[2,1],[1,1],[2,0],[4,0],[3,1],[2,2],[2,0],[3,0],[1,2],[3,0],[1,1],[4,0],[2,2],[1,2],[0,2],[2,1],[2,0],[2,1],[2,1],[2,0],[1,3],[3,0],[0,0],[1,0],[2,0],[1,0],[0,2],[3,1],[2,0],[3,0],[0,2],[2,0],[2,0],[1,1],[1,0],[2,0],[3,0],[0,2],[2,0],[1,1],[2,1],[0,2],[3,1],[1,2],[1,1],[0,2],[0,2],[1,1],[1,2],[1,2],[1,0],[1,2],[1,1],[0,2],[1,2],[0,2],[1,1],[0,3],[2,0],[2,2],[0,0],[1,1],[0,1]]};
 
 const JOGOS = [
   {id:0,date:"2026-06-11",home:"México",away:"África do Sul",group:"A"},
@@ -903,7 +904,7 @@ function showPage(name, el) {
   if (name === 'grupos') { renderGrupos(); renderBracket(); }
   if (name === 'matamata') renderMatamata();
   if (name === 'meuspalpites') renderMeusPalpites();
-  if (name === 'central') { startCentralPolling(); } else { stopCentralPolling(); }
+  if (name === 'central' || name === 'jogos') { startCentralPolling(); } else { stopCentralPolling(); }
 }
 
 // ============================================================
@@ -962,7 +963,7 @@ function renderJogos() {
               <span class="time-nome left">${j.home}</span>
               ${res
                 ? `<div class="visitor-result-display">${res[0]} × ${res[1]}</div>`
-                : `<span class="visitor-pending">a jogar</span>`}
+                : `<span class="cc-live-slot" id="live-slot-${j.id}"><span class="visitor-pending">a jogar</span></span>`}
               <span class="time-nome right">${j.away}</span>
               <span class="time-flag">${af}</span>
             </div>
@@ -2037,15 +2038,76 @@ function renderCentral() {
   container.innerHTML = html;
 }
 
+function findEspnMatch(homePT, awayPT) {
+  if (!STATE.central) return null;
+  return STATE.central.find(ev => {
+    const comp = ev.competitions && ev.competitions[0];
+    if (!comp) return false;
+    const home = (comp.competitors || []).find(c => c.homeAway === 'home');
+    const away = (comp.competitors || []).find(c => c.homeAway === 'away');
+    if (!home || !away) return false;
+    const h = translateTeam(home.team.displayName);
+    const a = translateTeam(away.team.displayName);
+    return (h === homePT && a === awayPT) || (h === awayPT && a === homePT);
+  }) || null;
+}
+
+// Atualiza só os jogos da fase de grupos que ainda não têm resultado oficial no Sheets,
+// sobrepondo o placar/status ao vivo da ESPN sem reconstruir a tela inteira (não fecha accordions abertos).
+function applyLiveOverlay() {
+  if (jogosPhase !== 'grupos') return; // por agora só fase de grupos
+  JOGOS.forEach(j => {
+    if (getResultado(j.id)) return; // resultado oficial do Sheets sempre tem prioridade e fica fixo
+    const slot = document.getElementById('live-slot-' + j.id);
+    if (!slot) return;
+    const ev = STATE.central ? findEspnMatch(j.home, j.away) : null;
+    if (!ev) { slot.innerHTML = `<span class="visitor-pending">a jogar</span>`; return; }
+    const comp = ev.competitions[0];
+    const status = comp.status || {};
+    const state = (status.type || {}).state;
+    const home = comp.competitors.find(c => c.homeAway === 'home');
+    const away = comp.competitors.find(c => c.homeAway === 'away');
+    const nossoHomeEhEspnHome = translateTeam(home.team.displayName) === j.home;
+    const scoreCasa = nossoHomeEhEspnHome ? home.score : away.score;
+    const scoreFora = nossoHomeEhEspnHome ? away.score : home.score;
+    if (state === 'in') {
+      slot.innerHTML = `<div class="visitor-result-display live">${scoreCasa} × ${scoreFora}</div>`;
+    } else if (state === 'post') {
+      slot.innerHTML = `<div class="visitor-result-display">${scoreCasa} × ${scoreFora}</div>`;
+    } else {
+      slot.innerHTML = `<span class="visitor-pending">a jogar</span>`;
+    }
+  });
+}
+
+async function refreshLiveData() {
+  await loadCentral();
+  renderCentral();
+  applyLiveOverlay();
+}
+
 function startCentralPolling() {
-  renderCentral(); // mostra "carregando" se ainda não tem dado
-  loadCentral().then(renderCentral);
+  refreshLiveData();
   if (centralInterval) clearInterval(centralInterval);
-  centralInterval = setInterval(() => { loadCentral().then(renderCentral); }, 30000);
+  centralInterval = setInterval(refreshLiveData, 15000);
 }
 
 function stopCentralPolling() {
   if (centralInterval) { clearInterval(centralInterval); centralInterval = null; }
+}
+
+// Recarrega resultados.json + planilhas do Google Sheets e re-renderiza a aba ativa
+async function refreshFromSheets() {
+  await loadState();
+  const activePage = document.querySelector('.page.active');
+  const id = activePage ? activePage.id.replace('page-', '') : 'jogos';
+  if (id === 'jogos') renderJogos();
+  if (id === 'ranking') renderRanking();
+  if (id === 'palpites') renderPalpites();
+  if (id === 'grupos') { renderGrupos(); renderBracket(); }
+  if (id === 'matamata') renderMatamata();
+  if (id === 'meuspalpites') renderMeusPalpites();
+  if (id === 'central') renderCentral();
 }
 
 // ============================================================
@@ -2054,7 +2116,8 @@ function stopCentralPolling() {
 (async()=>{
   await loadState();
   renderJogos();
-  // Auto-refresh a cada 2 minutos
+  startCentralPolling(); // 'Jogos' é a aba inicial, então já liga o placar ao vivo
+  // Auto-refresh do Sheets (resultados oficiais) a cada 2 minutos
   setInterval(refreshFromSheets, 2 * 60 * 1000);
 })();
 </script>
