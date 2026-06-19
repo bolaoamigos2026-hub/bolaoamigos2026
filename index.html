@@ -561,13 +561,12 @@
 
 <!-- TABS -->
 <div class="tabs">
-  <div class="tab active" onclick="showPage('jogos',this)">Jogos</div>
   <div class="tab" onclick="showPage('central',this)">🔴 Central da Copa</div>
+  <div class="tab active" onclick="showPage('jogos',this)">Jogos</div>
+  <div class="tab" onclick="showPage('meuspalpites',this)">Minha Copa</div>
+  <div class="tab" onclick="showPage('matamata',this)">Especiais</div>
   <div class="tab" onclick="showPage('ranking',this)">Ranking</div>
   <div class="tab" onclick="showPage('palpites',this)">Palpites</div>
-  <div class="tab" onclick="showPage('grupos',this)">Resultados</div>
-  <div class="tab" onclick="showPage('matamata',this)">Especiais</div>
-  <div class="tab" onclick="showPage('meuspalpites',this)">Meus Palpites</div>
 </div>
 
 <div class="main">
@@ -579,7 +578,14 @@
 
   <!-- CENTRAL DA COPA -->
   <div id="page-central" class="page">
-    <div id="central-container"></div>
+    <div class="palpites-filter" id="central-subnav">
+      <button class="filter-btn" data-sec="hoje" onclick="setCentralSection('hoje')">🔴 Jogos de Hoje</button>
+      <button class="filter-btn" data-sec="grupos" onclick="setCentralSection('grupos')">📊 Fase de Grupos</button>
+      <button class="filter-btn" data-sec="matamata" onclick="setCentralSection('matamata')">🏆 Mata-Mata</button>
+    </div>
+    <div id="central-sec-hoje"><div id="central-container"></div></div>
+    <div id="central-sec-grupos" style="display:none"><div id="grupos-container"></div></div>
+    <div id="central-sec-matamata" style="display:none"><div id="bracket-container" style="margin-top:28px"></div></div>
   </div>
 
   <!-- RANKING -->
@@ -604,12 +610,6 @@
         <tbody id="palpites-tbody"></tbody>
       </table>
     </div>
-  </div>
-
-  <!-- GRUPOS -->
-  <div id="page-grupos" class="page">
-    <div id="grupos-container"></div>
-    <div id="bracket-container" style="margin-top:28px"></div>
   </div>
 
   <!-- MATA-MATA -->
@@ -759,6 +759,20 @@ function translateTeam(name) { return ESPN_TEAM_MAP[name] || name; }
 // ============================================================
 let STATE = { resultados: {}, grupos: {}, matamata: {}, gabarito_mm: {}, central: null, centralDay: null };
 let centralInterval = null;
+let centralSection = 'hoje';
+
+function setCentralSection(sec) {
+  centralSection = sec;
+  document.querySelectorAll('#central-subnav .filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.sec === sec);
+  });
+  document.getElementById('central-sec-hoje').style.display = sec === 'hoje' ? 'block' : 'none';
+  document.getElementById('central-sec-grupos').style.display = sec === 'grupos' ? 'block' : 'none';
+  document.getElementById('central-sec-matamata').style.display = sec === 'matamata' ? 'block' : 'none';
+  if (sec === 'hoje') { startCentralPolling(); } else { stopCentralPolling(); }
+  if (sec === 'grupos') renderGrupos();
+  if (sec === 'matamata') renderBracket();
+}
 
 const SHEETS_CSV_URL      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSRP4QHIvMNU6dhijTW8ZmHblIXJjM8IvWjql0FpU0BoBK1Ud0Dpx9klHBEZtbDDXneMzVb0J7nYfgg/pub?output=csv';
 const SHEETS_PALPITES_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE6riCk3-KDCmn03PRoq70VMn8bEw5bORvQLoIPJBbf26vsanwec7iLdt3Szs1dg5SWwQkKn08bx0d/pub?output=csv';
@@ -901,10 +915,11 @@ function showPage(name, el) {
   if (el) el.classList.add('active');
   if (name === 'ranking') renderRanking();
   if (name === 'palpites') renderPalpites();
-  if (name === 'grupos') { renderGrupos(); renderBracket(); }
   if (name === 'matamata') renderMatamata();
   if (name === 'meuspalpites') renderMeusPalpites();
-  if (name === 'central' || name === 'jogos') { startCentralPolling(); } else { stopCentralPolling(); }
+  if (name === 'central') { setCentralSection(centralSection); }
+  else if (name === 'jogos') { startCentralPolling(); }
+  else { stopCentralPolling(); }
 }
 
 // ============================================================
@@ -1403,17 +1418,17 @@ function calcMMScore(palp, gab) {
   if (isFinal) {
     if (both && fullExact) return 15;
     // campeao/vice checked separately in scoreMMEspecial
+    if (one && fullExact) return 5;
     if (both) return 4;
-    if (one && fullExact) return 3;
     if (one) return 2;
     if (fullExact) return 1;
     return 0;
   }
 
   // Regular knockout
-  if (both && fullExact) return 8;
+  if (both && fullExact) return 7;
+  if (one && fullExact) return 5;
   if (both) return 4;
-  if (one && fullExact) return 3;
   if (one) return 2;
   if (fullExact) return 1;
   return 0;
@@ -2104,10 +2119,13 @@ async function refreshFromSheets() {
   if (id === 'jogos') renderJogos();
   if (id === 'ranking') renderRanking();
   if (id === 'palpites') renderPalpites();
-  if (id === 'grupos') { renderGrupos(); renderBracket(); }
   if (id === 'matamata') renderMatamata();
   if (id === 'meuspalpites') renderMeusPalpites();
-  if (id === 'central') renderCentral();
+  if (id === 'central') {
+    if (centralSection === 'hoje') renderCentral();
+    if (centralSection === 'grupos') renderGrupos();
+    if (centralSection === 'matamata') renderBracket();
+  }
 }
 
 // ============================================================
