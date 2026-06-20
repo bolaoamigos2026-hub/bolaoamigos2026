@@ -926,6 +926,12 @@ function showPage(name, el) {
 // JOGOS
 // ============================================================
 let jogosPhase = 'grupos'; // 'grupos' | 'r16' | 'qf' | 'sf' | 'f' | 'final'
+let jogosDiaFilter = (() => {
+  const now = new Date();
+  const hoje = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const jogoHoje = JOGOS.find(j => j.date === hoje);
+  return jogoHoje ? hoje : 'todos';
+})();
 
 const FASES_MM_DEF = [
   { id: 'r16',   label: '16avos', emoji: '⚔️',  ids: [73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88] },
@@ -954,9 +960,17 @@ function renderJogos() {
   </div>`;
 
   if (jogosPhase === 'grupos') {
+    // Sub-filtro por dia (corta a lista de 72 jogos)
+    const diasUnicos = [...new Set(JOGOS.map(j => j.date))];
+    html += `<select class="mp-name-select" style="margin-bottom:14px" onchange="setJogosDiaFilter(this.value)">
+      <option value="todos" ${jogosDiaFilter==='todos'?'selected':''}>Todos os dias</option>
+      ${diasUnicos.map(d => `<option value="${d}" ${jogosDiaFilter===d?'selected':''}>${fmtDate(d)}</option>`).join('')}
+    </select>`;
+
     // ── Fase de grupos agrupada por data ──────────────────────────
+    const jogosFiltrados = jogosDiaFilter === 'todos' ? JOGOS : JOGOS.filter(j => j.date === jogosDiaFilter);
     const byDate = {};
-    JOGOS.forEach(j => { if (!byDate[j.date]) byDate[j.date] = []; byDate[j.date].push(j); });
+    jogosFiltrados.forEach(j => { if (!byDate[j.date]) byDate[j.date] = []; byDate[j.date].push(j); });
     let lastRodada = null;
     Object.keys(byDate).sort().forEach(date => {
       const rodada = getRodada(byDate[date][0].id);
@@ -1043,6 +1057,11 @@ function renderJogos() {
 
 function setJogosPhase(phase) {
   jogosPhase = phase;
+  renderJogos();
+}
+
+function setJogosDiaFilter(v) {
+  jogosDiaFilter = v;
   renderJogos();
 }
 
@@ -1152,13 +1171,13 @@ const GRUPOS_DEF = {
   L:["Inglaterra","Croácia","Gana","Panamá"]
 };
 
-function calcGrupoStats(grupo) {
+function calcGrupoStatsFromPicks(grupo, picks) {
   const times = GRUPOS_DEF[grupo];
   const stats = {};
   times.forEach(t => { stats[t] = {pts:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0}; });
   JOGOS.filter(j => j.group===grupo).forEach(j => {
-    const res = getResultado(j.id);
-    if (!res) return;
+    const res = picks[j.id];
+    if (!res || res[0]===null || res[0]===undefined) return;
     const [gh,ga] = res; const h=j.home,a=j.away;
     if (!stats[h]||!stats[a]) return;
     stats[h].j++;stats[a].j++;stats[h].gp+=gh;stats[h].gc+=ga;stats[a].gp+=ga;stats[a].gc+=gh;
@@ -1169,6 +1188,8 @@ function calcGrupoStats(grupo) {
   });
   return times.map(t=>({name:t,...stats[t]})).sort((a,b)=>b.pts-a.pts||b.sg-a.sg||b.gp-a.gp);
 }
+function calcGrupoStats(grupo) { return calcGrupoStatsFromPicks(grupo, STATE.resultados); }
+
 
 function renderGrupos() {
   const container = document.getElementById('grupos-container');
@@ -1821,7 +1842,7 @@ async function saveAccordionImage(id) {
 // MEUS PALPITES
 // ============================================================
 let mpSelectedName = null;
-let mpSection = 'grupos'; // 'grupos' | 'matamata'
+let mpSection = 'jogos'; // 'jogos' | 'grupos' | 'matamata'
 
 function renderMeusPalpites() {
   const container = document.getElementById('meuspalpites-container');
@@ -1835,7 +1856,8 @@ function renderMeusPalpites() {
     </select>
   </div>
   <div class="palpites-filter" style="margin-bottom:16px">
-    <button class="filter-btn ${mpSection==='grupos'?'active':''}" onclick="setMpSection('grupos')">⚽ Fase de Grupos</button>
+    <button class="filter-btn ${mpSection==='jogos'?'active':''}" onclick="setMpSection('jogos')">⚽ Jogos</button>
+    <button class="filter-btn ${mpSection==='grupos'?'active':''}" onclick="setMpSection('grupos')">📊 Fase de Grupos</button>
     <button class="filter-btn ${mpSection==='matamata'?'active':''}" onclick="setMpSection('matamata')">🏆 Mata-Mata</button>
   </div>`;
 
@@ -1865,8 +1887,8 @@ function renderMeusPalpites() {
     <div class="mp-stat-card"><div class="mp-stat-label">A jogar</div><div class="mp-stat-val">${pendentes}</div></div>
   </div>`;
 
-  // ── FASE DE GRUPOS ──────────────────────────────────────────────
-  if (mpSection === 'grupos') {
+  // ── JOGOS (palpites por rodada) ──────────────────────────────────
+  if (mpSection === 'jogos') {
     for (let r = 1; r <= 3; r++) {
     const range = RODADA_RANGES[r-1];
     const jogosR = JOGOS.slice(range[0], range[1]+1);
@@ -1900,6 +1922,39 @@ function renderMeusPalpites() {
       </div>`;
     });
     } // fim for rodadas
+  } // fim mpSection === 'jogos'
+
+  // ── FASE DE GRUPOS (classificação simulada x realidade) ──────────
+  if (mpSection === 'grupos') {
+    // Calcula quais 12 terceiros colocados (pelo palpite) estão entre os 8 melhores
+    const terceiros = Object.keys(GRUPOS_DEF).map(g => {
+      const tab = calcGrupoStatsFromPicks(g, PALPITES[name]);
+      return {...tab[2], grupo: g};
+    }).sort((a,b)=>b.pts-a.pts||b.sg-a.sg||b.gp-a.gp);
+    const melhores3os = new Set(terceiros.slice(0,8).map(t=>t.grupo+'|'+t.name));
+
+    html += `<div class="grupos-grid">`;
+    Object.keys(GRUPOS_DEF).forEach(g => {
+      const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
+      const real = calcGrupoStats(g);
+      const grupoComecou = JOGOS.some(j => j.group === g && getResultado(j.id));
+      html += `<div class="grupo-card"><div class="grupo-titulo">GRUPO ${g}</div>
+        <table class="grupo-table"><thead><tr><th class="nome">Seleção</th><th>Pts</th><th>SG</th></tr></thead><tbody>`;
+      sim.forEach((t,i) => {
+        const hit = grupoComecou && real[i] && real[i].name === t.name;
+        const melhor3 = i === 2 && melhores3os.has(g+'|'+t.name);
+        const cls = (i < 2 || melhor3) ? 'classificado' : '';
+        html += `<tr class="${cls}"${hit?' style="background:#dcfce7"':''}>
+          <td class="nome">${flag(t.name)} ${t.name}${melhor3?' <span style="font-size:9px;font-weight:700;color:#166534;background:#e8f5ec;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}${hit?' <span style="font-size:9px;font-weight:700;color:#166534;background:#bbf7d0;border-radius:4px;padding:1px 4px;margin-left:4px">+2</span>':''}</td>
+          <td>${t.pts}</td><td>${t.sg>0?'+':''}${t.sg}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+    });
+    html += `</div>`;
+    html += `<div style="margin-top:10px;padding:10px 14px;background:#f0fbf5;border-radius:10px;border:1px solid #d0ecd8;font-size:12px;color:var(--muted)">
+      🟢 Classificados pelo palpite (1° e 2° de cada grupo) · <b>8m</b> = entre os 8 melhores 3° colocados
+    </div>`;
   } // fim mpSection === 'grupos'
 
   // ── MATA-MATA ───────────────────────────────────────────────────
