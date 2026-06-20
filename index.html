@@ -1314,6 +1314,44 @@ function bracketMatchHtml(id, labelFallback, isFinal) {
   </div>`;
 }
 
+// Card de chaveamento baseado no PALPITE de um participante (Minha Copa),
+// comparando com o chaveamento real (STATE.gabarito_mm) quando os times já forem conhecidos.
+function bracketCardMC(matchId, labelFallback, isFinal, picks) {
+  const p = (picks || []).find(x => x.id === matchId);
+  const date = FASE_DATES[matchId] ? `<span style="font-size:9px;color:var(--muted)">${FASE_DATES[matchId]}</span>` : '';
+  const borderColor = isFinal ? 'var(--amarelo)' : 'var(--border)';
+  const bg = isFinal ? 'linear-gradient(135deg,#fffde8,#fff)' : '#fff';
+
+  if (!p) {
+    return `<div style="background:${bg};border:1.5px solid ${borderColor};border-radius:9px;padding:7px 10px;min-width:130px;max-width:160px;font-size:11px;color:#bbb">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">${date}<span style="font-size:9px;color:#bbb">J${matchId}</span></div>
+      sem palpite
+    </div>`;
+  }
+
+  const real = STATE.gabarito_mm[matchId];
+  const realHasTeams = real && real.timeA && !/^[W12]/.test(real.timeA) && !real.timeA.startsWith('RU');
+  const hasRealResult = real && real.golsA !== null;
+  const acertouA = realHasTeams && p.timeA === real.timeA;
+  const acertouB = realHasTeams && p.timeB === real.timeB;
+  const corA = realHasTeams ? (acertouA ? '#166534' : '#888') : 'var(--texto)';
+  const corB = realHasTeams ? (acertouB ? '#166534' : '#888') : 'var(--texto)';
+  const bgA  = realHasTeams && acertouA ? '#dcfce7' : 'transparent';
+  const bgB  = realHasTeams && acertouB ? '#dcfce7' : 'transparent';
+  const pts = hasRealResult ? calcMMScore(p, real) : null;
+
+  let scoreStr = `${p.golsA}–${p.golsB}`;
+  if (p.penaltisA !== null) scoreStr += ` (${p.penaltisA}–${p.penaltisB}p)`;
+
+  return `<div style="background:${bg};border:1.5px solid ${borderColor};border-radius:9px;padding:7px 10px;min-width:130px;max-width:160px;font-size:11px;font-weight:600;color:var(--texto);box-shadow:var(--shadow)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">${date}<span style="font-size:9px;color:#bbb">J${matchId}</span></div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corA};background:${bgA};border-radius:4px;padding:0 2px">${flag(p.timeA)} ${p.timeA}</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:var(--verde-escuro);text-align:center;margin:2px 0">${scoreStr}</div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corB};background:${bgB};border-radius:4px;padding:0 2px">${flag(p.timeB)} ${p.timeB}</div>
+    ${pts!==null ? `<div style="text-align:right;font-size:9px;font-weight:700;color:${pts>0?'#166534':'#ccc'};margin-top:2px">${pts>0?'+'+pts:'0'} pts</div>` : ''}
+  </div>`;
+}
+
 function renderBracket() {
   const container = document.getElementById('bracket-container');
   if (!container) return;
@@ -1957,43 +1995,28 @@ function renderMeusPalpites() {
     </div>`;
   } // fim mpSection === 'grupos'
 
-  // ── MATA-MATA ───────────────────────────────────────────────────
+  // ── MATA-MATA (chaveamento pelo palpite inicial) ──────────────────
   if (mpSection === 'matamata') {
   const palpitesMM = PALPITES_MM[name] || [];
   if (palpitesMM.length > 0) {
-    const FASES_MM = [
-      {label:'Oitavas de Final', ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
-      {label:'Quartas de Final', ids:[89,90,91,92,93,94,95,96]},
-      {label:'Semifinais',       ids:[97,98,99,100]},
-      {label:'3º Lugar',         ids:[103]},
-      {label:'Final',            ids:[104]}
+    html += `<div class="mp-rodada-header" style="margin-top:0">Mata-Mata <span style="font-size:11px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:500">${mmScore.jogos} jogos · ${mmScore.total} pts</span></div>`;
+    const fasesBracket = [
+      {label:'16 Avos de Final', matches: BRACKET.r16},
+      {label:'Oitavas de Final',  matches: BRACKET.qf},
+      {label:'Quartas de Final',  matches: BRACKET.sf},
+      {label:'Semifinais',        matches: BRACKET.final},
+      {label:'3º Lugar',          matches: BRACKET.third},
+      {label:'🏆 Final',          matches: BRACKET.champion},
     ];
-    html += `<div class="mp-rodada-header" style="margin-top:20px">Mata-Mata <span style="font-size:11px;color:var(--muted);font-family:'Inter',sans-serif;font-weight:500">${mmScore.jogos} jogos · ${mmScore.total} pts</span></div>`;
-    FASES_MM.forEach(fase => {
-      const faseJogos = fase.ids.map(id => palpitesMM.find(p=>p.id===id)).filter(Boolean);
-      if (faseJogos.length === 0) return;
-      const hasAny = fase.ids.some(id => { const g=STATE.gabarito_mm[id]; return g&&g.golsA!==null; });
-      html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">${fase.label}</div>`;
-      faseJogos.forEach(palp => {
-        const gab = STATE.gabarito_mm[palp.id];
-        const pts = calcMMScore(palp, gab);
-        let cls = gab && gab.golsA !== null ? (pts > 0 ? (pts >= 4 ? 'exato' : 'certo') : 'errado') : 'sem-resultado';
-        const tA = palp.timeA || '—', tB = palp.timeB || '—';
-        let scoreStr = `${palp.golsA}–${palp.golsB}`;
-        if (palp.penaltisA !== null) scoreStr += ` (${palp.penaltisA}–${palp.penaltisB} pen)`;
-        let resStr = '';
-        if (gab && gab.golsA !== null) {
-          resStr = `${gab.golsA}–${gab.golsB}`;
-          if (gab.penaltisA !== null) resStr += ` (${gab.penaltisA}–${gab.penaltisB} pen)`;
-        }
-        html += `<div class="mp-mm-jogo ${cls}">
-          <span class="mp-match" style="flex:none;min-width:0">${flag(tA)} ${tA} × ${flag(tB)} ${tB}</span>
-          <span class="mp-palp ${cls}" style="font-size:13px">${scoreStr}</span>
-          <span class="mp-res">${resStr||'a jogar'}</span>
-          <span class="mp-pts ${pts===null?'':(pts>0?'p3':'p0')}">${pts!==null?(pts>0?'+'+pts:'0'):''}</span>
-        </div>`;
-      });
+    fasesBracket.forEach(f => {
+      html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${f.label}</div>`;
+      html += `<div style="display:flex;flex-wrap:wrap;gap:8px">`;
+      f.matches.forEach(m => { html += bracketCardMC(m.id, m.label, m.id===104, palpitesMM); });
+      html += `</div>`;
     });
+    html += `<div style="margin-top:10px;padding:10px 14px;background:#f0fbf5;border-radius:10px;border:1px solid #d0ecd8;font-size:12px;color:var(--muted)">
+      🟢 Time em destaque = acertou esse time no confronto, comparado ao chaveamento real
+    </div>`;
   }
 
   } // fim mpSection === 'matamata'
