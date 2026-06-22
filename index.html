@@ -567,6 +567,7 @@
   <div class="tab" onclick="showPage('matamata',this)">Especiais</div>
   <div class="tab" onclick="showPage('ranking',this)">Ranking</div>
   <div class="tab" onclick="showPage('palpites',this)">Palpites</div>
+  <div class="tab" onclick="showPage('regras',this)">📜 Regras</div>
 </div>
 
 <div class="main">
@@ -620,6 +621,67 @@
   <!-- MEUS PALPITES -->
   <div id="page-meuspalpites" class="page">
     <div id="meuspalpites-container"></div>
+  </div>
+
+  <!-- REGRAS -->
+  <div id="page-regras" class="page">
+    <div class="section-header">📜 Regras de Pontuação</div>
+
+    <div class="grupo-card" style="margin-bottom:14px">
+      <div class="grupo-titulo">⚽ Fase de Grupos</div>
+      <table class="grupo-table">
+        <tbody>
+          <tr><td class="nome">Placar exato</td><td style="text-align:right;font-weight:700">3 pts</td></tr>
+          <tr><td class="nome">Resultado certo (vencedor ou empate), sem o placar exato</td><td style="text-align:right;font-weight:700">1 pt</td></tr>
+          <tr><td class="nome">Errou o resultado</td><td style="text-align:right;font-weight:700">0 pts</td></tr>
+          <tr><td class="nome">Bônus: acertou a seleção que fica em cada posição do grupo (1º a 4º)</td><td style="text-align:right;font-weight:700">+2 pts</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:8px 14px 12px;font-size:11px;color:var(--muted)">O bônus de posição vale pra cada uma das 4 posições, nos 12 grupos, e só é somado depois que o grupo tiver os 6 jogos decididos.</div>
+    </div>
+
+    <div class="grupo-card" style="margin-bottom:14px">
+      <div class="grupo-titulo">🏆 Mata-Mata</div>
+      <table class="grupo-table">
+        <tbody>
+          <tr><td class="nome">Acertou os 2 times e o placar exato</td><td style="text-align:right;font-weight:700">7 pts</td></tr>
+          <tr><td class="nome">Acertou 1 dos times e o placar exato</td><td style="text-align:right;font-weight:700">5 pts</td></tr>
+          <tr><td class="nome">Acertou os 2 times, sem o placar exato</td><td style="text-align:right;font-weight:700">4 pts</td></tr>
+          <tr><td class="nome">Acertou 1 dos times, sem o placar exato</td><td style="text-align:right;font-weight:700">2 pts</td></tr>
+          <tr><td class="nome">Errou os 2 times, mas acertou o placar exato</td><td style="text-align:right;font-weight:700">1 pt</td></tr>
+          <tr><td class="nome">Errou tudo</td><td style="text-align:right;font-weight:700">0 pts</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:8px 14px 12px;font-size:11px;color:var(--muted)">"Placar exato" considera o tempo normal e, quando o jogo vai aos pênaltis, considera também o placar dos pênaltis. Vale também pro jogo de 3º lugar.</div>
+    </div>
+
+    <div class="grupo-card" style="margin-bottom:14px;border-color:var(--amarelo)">
+      <div class="grupo-titulo">🥇 Final</div>
+      <div style="padding:10px 14px;font-size:12px;color:var(--muted)">Segue exatamente a mesma tabela do Mata-Mata acima, sem regra especial de placar.</div>
+    </div>
+
+    <div class="grupo-card" style="margin-bottom:14px">
+      <div class="grupo-titulo">🎖️ Bônus da Final</div>
+      <table class="grupo-table">
+        <tbody>
+          <tr><td class="nome">Acertou o Campeão</td><td style="text-align:right;font-weight:700">+20 pts</td></tr>
+          <tr><td class="nome">Acertou o Vice</td><td style="text-align:right;font-weight:700">+15 pts</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:8px 14px 12px;font-size:11px;color:var(--muted)">Esse bônus é independente do placar da Final, soma sempre que acertar.</div>
+    </div>
+
+    <div class="grupo-card">
+      <div class="grupo-titulo">⭐ Especiais</div>
+      <table class="grupo-table">
+        <tbody>
+          <tr><td class="nome">Campeão da Copa</td><td style="text-align:right;font-weight:700">20 pts</td></tr>
+          <tr><td class="nome">Melhor Jogador</td><td style="text-align:right;font-weight:700">10 pts</td></tr>
+          <tr><td class="nome">Artilheiro</td><td style="text-align:right;font-weight:700">10 pts</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:8px 14px 12px;font-size:11px;color:var(--muted)">Esses pontos aparecem só na aba Especiais e não entram no Ranking principal.</div>
+    </div>
   </div>
 
   </div>
@@ -881,6 +943,20 @@ function calcPoints(palp, res) {
   if (resSide === palSide) return 1;
   return 0;
 }
+// +2 pts por seleção que acertou a posição exata do grupo (1º a 4º),
+// só conta depois que o grupo tiver os 6 jogos decididos de verdade.
+function calcGrupoPosicaoBonus(name) {
+  let bonus = 0;
+  Object.keys(GRUPOS_DEF).forEach(g => {
+    const grupoCompleto = JOGOS.filter(j => j.group === g).every(j => getResultado(j.id));
+    if (!grupoCompleto) return;
+    const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
+    const real = calcGrupoStats(g);
+    sim.forEach((t,i) => { if (real[i] && real[i].name === t.name) bonus += 2; });
+  });
+  return bonus;
+}
+
 function scoreFor(name) {
   let total = 0, exatos = 0, certos = 0, jogosComResultado = 0;
   for (let i = 0; i < 72; i++) {
@@ -896,6 +972,8 @@ function scoreFor(name) {
   // Add MM points
   const mm = scoreMM(name);
   total += mm.total;
+  // +2 por posição certa no grupo (só após o grupo terminar)
+  total += calcGrupoPosicaoBonus(name);
   return {total, exatos, certos, jogosComResultado};
 }
 function fmtDate(d) {
@@ -1193,6 +1271,13 @@ function calcGrupoStats(grupo) { return calcGrupoStatsFromPicks(grupo, STATE.res
 
 function renderGrupos() {
   const container = document.getElementById('grupos-container');
+  // Calcula quais 12 terceiros colocados (reais) estão entre os 8 melhores
+  const terceirosReais = Object.keys(GRUPOS_DEF).map(g => {
+    const tab = calcGrupoStats(g);
+    return {...tab[2], grupo: g};
+  }).sort((a,b)=>b.pts-a.pts||b.sg-a.sg||b.gp-a.gp);
+  const melhores3Reais = new Set(terceirosReais.slice(0,8).map(t=>t.grupo+'|'+t.name));
+
   let html = `<div class="section-header">📊 Fase de Grupos</div>
   <div class="grupos-grid">`;
   Object.keys(GRUPOS_DEF).forEach(g => {
@@ -1206,11 +1291,13 @@ function renderGrupos() {
         </tr></thead>
         <tbody>`;
     rows.forEach((t,i) => {
-      const cls = i < 2 ? 'classificado' : '';
       const nome = typeof t==='string' ? t : t.name;
+      const melhor3 = i === 2 && melhores3Reais.has(g+'|'+nome);
+      const cls = i < 2 ? 'classificado' : '';
+      const rowStyle = melhor3 ? ' style="background:#fef9c3"' : '';
       const st = typeof t==='string' ? sorted.find(s=>s.name===t)||{j:0,pts:0,sg:0,gp:0} : t;
-      html += `<tr class="${cls}">
-        <td class="nome">${flag(nome)} ${nome}</td>
+      html += `<tr class="${cls}"${rowStyle}>
+        <td class="nome">${flag(nome)} ${nome}${melhor3?' <span style="font-size:9px;font-weight:700;color:#854d0e;background:#fef08a;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}</td>
         <td>${st.j}</td><td>${st.pts}</td>
         <td>${st.sg>0?'+':''}${st.sg}</td><td>${st.gp}</td>
       </tr>`;
@@ -1219,7 +1306,7 @@ function renderGrupos() {
   });
   html += `</div>
   <div style="margin-top:10px;padding:10px 14px;background:#f0fbf5;border-radius:10px;border:1px solid #d0ecd8;font-size:12px;color:var(--muted)">
-    🟢 Classificados diretos (1° e 2° de cada grupo) · Os 8 melhores 3° colocados também avançam
+    🟢 Classificados diretos (1° e 2° de cada grupo) · 🟡 <b>8m</b> = entre os 8 melhores 3° colocados
   </div>`;
   container.innerHTML = html;
 }
@@ -1471,20 +1558,7 @@ function calcMMScore(palp, gab) {
   const oneB = palpTimes[1] === gabTimes[1];
   const one = oneA || oneB;
 
-  const isFinal = palp.id === 104;
-
-  // Special final scoring
-  if (isFinal) {
-    if (both && fullExact) return 15;
-    // campeao/vice checked separately in scoreMMEspecial
-    if (one && fullExact) return 5;
-    if (both) return 4;
-    if (one) return 2;
-    if (fullExact) return 1;
-    return 0;
-  }
-
-  // Regular knockout
+  // A Final segue exatamente os mesmos critérios do Mata-Mata (sem bônus especial de placar)
   if (both && fullExact) return 7;
   if (one && fullExact) return 5;
   if (both) return 4;
@@ -1513,8 +1587,8 @@ function scoreMMEspecial(name) {
   const palpCampeao = winner(palp);
   const palpVice = loser(palp);
   return {
-    campeao: palpCampeao === realCampeao ? 7 : 0,
-    vice: palpVice === realVice ? 5 : 0
+    campeao: palpCampeao === realCampeao ? 20 : 0,
+    vice: palpVice === realVice ? 15 : 0
   };
 }
 
@@ -1526,16 +1600,9 @@ function scoreMM(name) {
     const pts = calcMMScore(palp, gab);
     if (pts !== null) { total += pts; jogos++; }
   });
-  // final especial (campeao/vice) - add if not already 15
-  const palp104 = palpites.find(j=>j.id===104);
-  const gab104 = STATE.gabarito_mm[104];
-  if (palp104 && gab104 && gab104.golsA !== null) {
-    const baseScore = calcMMScore(palp104, gab104);
-    if (baseScore !== 15) {
-      const esp = scoreMMEspecial(name);
-      total += esp.campeao + esp.vice;
-    }
-  }
+  // bônus de campeão/vice, independente do placar da final
+  const esp = scoreMMEspecial(name);
+  total += esp.campeao + esp.vice;
   return {total, jogos};
 }
 
@@ -1607,7 +1674,7 @@ function renderMatamata() {
     const cOk = campeaoReal && normalizeStr(p.campeao)===normalizeStr(campeaoReal);
     const mOk = melhorReal && normalizeStr(p.melhor)===normalizeStr(melhorReal);
     const aOk = artilheiroReal && normalizeStr(p.artilheiro)===normalizeStr(artilheiroReal);
-    let pts=0; if(cOk)pts+=20; if(mOk)pts+=20; if(aOk)pts+=20;
+    let pts=0; if(cOk)pts+=20; if(mOk)pts+=10; if(aOk)pts+=10;
     return {n,p,cOk,mOk,aOk,pts};
   }).sort((a,b)=>b.pts-a.pts);
   espRows.forEach(({n,p,cOk,mOk,aOk,pts}) => {
@@ -1916,6 +1983,8 @@ function renderMeusPalpites() {
   }
   const mmScore = scoreMM(name);
   totalPts += mmScore.total;
+  const grupoPosicaoBonus = calcGrupoPosicaoBonus(name);
+  totalPts += grupoPosicaoBonus;
 
   html += `<div class="mp-stats-row">
     <div class="mp-stat-card"><div class="mp-stat-label">Total</div><div class="mp-stat-val">${totalPts}</div></div>
@@ -1974,14 +2043,17 @@ function renderMeusPalpites() {
     html += `<div class="grupos-grid">`;
     Object.keys(GRUPOS_DEF).forEach(g => {
       const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
+      const real = calcGrupoStats(g);
+      const grupoCompleto = JOGOS.filter(j => j.group === g).every(j => getResultado(j.id));
       html += `<div class="grupo-card"><div class="grupo-titulo">GRUPO ${g}</div>
         <table class="grupo-table"><thead><tr><th class="nome">Seleção</th><th>Pts</th><th>SG</th></tr></thead><tbody>`;
       sim.forEach((t,i) => {
         const melhor3 = i === 2 && melhores3os.has(g+'|'+t.name);
         const cls = i < 2 ? 'classificado' : '';
         const rowStyle = melhor3 ? ' style="background:#fef9c3"' : '';
+        const hit = grupoCompleto && real[i] && real[i].name === t.name;
         html += `<tr class="${cls}"${rowStyle}>
-          <td class="nome">${flag(t.name)} ${t.name}${melhor3?' <span style="font-size:9px;font-weight:700;color:#854d0e;background:#fef08a;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}</td>
+          <td class="nome">${flag(t.name)} ${t.name}${melhor3?' <span style="font-size:9px;font-weight:700;color:#854d0e;background:#fef08a;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}${hit?' <span style="font-size:9px;font-weight:700;color:#166534;background:#bbf7d0;border-radius:4px;padding:1px 4px;margin-left:4px">+2</span>':''}</td>
           <td>${t.pts}</td><td>${t.sg>0?'+':''}${t.sg}</td>
         </tr>`;
       });
@@ -1989,7 +2061,7 @@ function renderMeusPalpites() {
     });
     html += `</div>`;
     html += `<div style="margin-top:10px;padding:10px 14px;background:#f0fbf5;border-radius:10px;border:1px solid #d0ecd8;font-size:12px;color:var(--muted)">
-      🟢 1° e 2° de cada grupo (classificação direta, fixo) · 🟡 <b>8m</b> = entre os 8 melhores 3° colocados pelo palpite
+      🟢 1° e 2° de cada grupo (classificação direta, fixo) · 🟡 <b>8m</b> = entre os 8 melhores 3° colocados pelo palpite · <b>+2</b> = posição certa (soma no Ranking, só após o grupo terminar)
     </div>`;
   } // fim mpSection === 'grupos'
 
