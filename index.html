@@ -583,6 +583,7 @@
       <button class="filter-btn" data-sec="hoje" onclick="setCentralSection('hoje')">🔴 Jogos de Hoje</button>
       <button class="filter-btn" data-sec="grupos" onclick="setCentralSection('grupos')">📊 Fase de Grupos</button>
       <button class="filter-btn" data-sec="matamata" onclick="setCentralSection('matamata')">🏆 Mata-Mata</button>
+      <button class="filter-btn" id="admin-btn" onclick="toggleAdmin()" style="margin-left:auto">🔐</button>
     </div>
     <div id="central-sec-hoje"><div id="central-container"></div></div>
     <div id="central-sec-grupos" style="display:none"><div id="grupos-container"></div></div>
@@ -822,6 +823,47 @@ function translateTeam(name) { return ESPN_TEAM_MAP[name] || name; }
 let STATE = { resultados: {}, grupos: {}, matamata: {}, gabarito_mm: {}, central: null, centralDay: null };
 let centralInterval = null;
 let centralSection = 'hoje';
+let adminMode = false;
+
+function toggleAdmin() {
+  if (adminMode) {
+    adminMode = false;
+    renderGrupos();
+    return;
+  }
+  const senha = prompt('🔐 Senha de administrador:');
+  if (senha === 'Copaescama') {
+    adminMode = true;
+    renderGrupos();
+  } else if (senha !== null) {
+    alert('Senha incorreta.');
+  }
+}
+
+function moverTime(grupo, idx, dir) {
+  // Garante que STATE.grupos[grupo] existe e é uma cópia editável
+  const sorted = calcGrupoStats(grupo);
+  if (!STATE.grupos[grupo]) STATE.grupos[grupo] = sorted.map(t => ({...t}));
+  const arr = STATE.grupos[grupo];
+  const novoIdx = idx + dir;
+  if (novoIdx < 0 || novoIdx >= arr.length) return;
+  // swap
+  const tmp = arr[idx]; arr[idx] = arr[novoIdx]; arr[novoIdx] = tmp;
+  renderGrupos();
+}
+
+function exportarJSON() {
+  const json = JSON.stringify({
+    resultados: STATE.resultados,
+    grupos: STATE.grupos,
+    matamata: STATE.matamata
+  }, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'resultados.json';
+  link.click();
+}
 
 function setCentralSection(sec) {
   centralSection = sec;
@@ -1271,6 +1313,16 @@ function calcGrupoStats(grupo) { return calcGrupoStatsFromPicks(grupo, STATE.res
 
 function renderGrupos() {
   const container = document.getElementById('grupos-container');
+
+  // Atualiza visual do botão admin
+  const adminBtn = document.getElementById('admin-btn');
+  if (adminBtn) {
+    adminBtn.textContent = adminMode ? '🔓 Admin ON' : '🔐';
+    adminBtn.style.background = adminMode ? '#b45309' : '';
+    adminBtn.style.color = adminMode ? '#fef3c7' : '';
+    adminBtn.style.borderColor = adminMode ? '#b45309' : '';
+  }
+
   // Calcula quais 12 terceiros colocados (reais) estão entre os 8 melhores
   const terceirosReais = Object.keys(GRUPOS_DEF).map(g => {
     const tab = calcGrupoStats(g);
@@ -1278,8 +1330,16 @@ function renderGrupos() {
   }).sort((a,b)=>b.pts-a.pts||b.sg-a.sg||b.gp-a.gp);
   const melhores3Reais = new Set(terceirosReais.slice(0,8).map(t=>t.grupo+'|'+t.name));
 
-  let html = `<div class="section-header">📊 Fase de Grupos</div>
-  <div class="grupos-grid">`;
+  let html = `<div class="section-header">📊 Fase de Grupos${adminMode ? ' <span style="font-size:11px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:6px;padding:2px 8px;margin-left:8px">MODO ADMIN</span>' : ''}</div>`;
+
+  if (adminMode) {
+    html += `<div style="background:#fef3c7;border:1.5px solid #b45309;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#7c2d12;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <span>⚠️ Use as setas ▲▼ para reordenar as seleções dentro de cada grupo. Após ajustar, exporte e suba o JSON no GitHub.</span>
+      <button onclick="exportarJSON()" style="background:#b45309;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-family:'Oswald',sans-serif;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">⬇️ Exportar resultados.json</button>
+    </div>`;
+  }
+
+  html += `<div class="grupos-grid">`;
   Object.keys(GRUPOS_DEF).forEach(g => {
     const sorted = calcGrupoStats(g);
     const rows = STATE.grupos[g] || sorted;
@@ -1288,6 +1348,7 @@ function renderGrupos() {
       <table class="grupo-table">
         <thead><tr>
           <th class="nome">Seleção</th><th>J</th><th>Pts</th><th>SG</th><th>GP</th>
+          ${adminMode ? '<th style="width:48px"></th>' : ''}
         </tr></thead>
         <tbody>`;
     rows.forEach((t,i) => {
@@ -1296,10 +1357,15 @@ function renderGrupos() {
       const cls = i < 2 ? 'classificado' : '';
       const rowStyle = melhor3 ? ' style="background:#fef9c3"' : '';
       const st = typeof t==='string' ? sorted.find(s=>s.name===t)||{j:0,pts:0,sg:0,gp:0} : t;
+      const arrowsHtml = adminMode ? `<td style="text-align:center;white-space:nowrap">
+        <button onclick="moverTime('${g}',${i},-1)" style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;padding:1px 5px;font-size:11px" ${i===0?'disabled':''}>▲</button>
+        <button onclick="moverTime('${g}',${i},1)" style="background:none;border:1px solid #ccc;border-radius:4px;cursor:pointer;padding:1px 5px;font-size:11px" ${i===rows.length-1?'disabled':''}>▼</button>
+      </td>` : '';
       html += `<tr class="${cls}"${rowStyle}>
         <td class="nome">${flag(nome)} ${nome}${melhor3?' <span style="font-size:9px;font-weight:700;color:#854d0e;background:#fef08a;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}</td>
         <td>${st.j}</td><td>${st.pts}</td>
         <td>${st.sg>0?'+':''}${st.sg}</td><td>${st.gp}</td>
+        ${arrowsHtml}
       </tr>`;
     });
     html += `</tbody></table></div>`;
