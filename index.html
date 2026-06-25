@@ -815,7 +815,7 @@ const SHEETS_CSV_URL      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSR
 const SHEETS_PALPITES_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTE6riCk3-KDCmn03PRoq70VMn8bEw5bORvQLoIPJBbf26vsanwec7iLdt3Szs1dg5SWwQkKn08bx0d/pub?output=csv';
 const SHEETS_MM_PAL_URL   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzy7zTYHd9jxjgxXLuED0rMCVvwjRCfVXqCfxIuu5mgtXTG3VLTjwf3vS8yl5TLarPDAShjsYzYZaW/pub?output=csv';
 const SHEETS_ESP_URL      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTIo7qTg90U-Tx1OirYOMiIiLOFU4-Xt8dyf9dhewOWzUDC9qCN_xCOvOHRpqhiBmhUINmxa079XgWn/pub?output=csv';
-const SHEETS_MM_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSRP4QHIvMNU6dhijTW8ZmHblIXJjM8IvWjql0FpU0BoBK1Ud0Dpx9klHBEZtbDDXneMzVb0J7nYfgg/pub?gid=2081392955&output=csv';
+const SHEETS_MM_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSRP4QHIvMNU6dhijTW8ZmHblIXJjM8IvWjql0FpU0BoBK1Ud0Dpx9klHBEZtbDDXneMzVb0J7nYfgg/pub?gid=2081392955&single=true&output=csv';
 const ESPN_SCOREBOARD_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
 
 // Parse CSV respeitando campos entre aspas
@@ -1561,6 +1561,18 @@ function scoreMMEspecial(name) {
   };
 }
 
+function calcGrupoPosicaoBonus(name) {
+  let total = 0;
+  Object.keys(GRUPOS_DEF).forEach(g => {
+    const grupoCompleto = JOGOS.filter(j => j.group === g).every(j => getResultado(j.id));
+    if (!grupoCompleto) return;
+    const sim  = calcGrupoStatsFromPicks(g, PALPITES[name]);
+    const real = calcGrupoStats(g);
+    sim.forEach((t, i) => { if (real[i] && real[i].name === t.name) total += 2; });
+  });
+  return total;
+}
+
 function scoreMM(name) {
   let total = 0, jogos = 0;
   const palpites = PALPITES_MM[name] || [];
@@ -1952,8 +1964,6 @@ function renderMeusPalpites() {
   }
   const mmScore = scoreMM(name);
   totalPts += mmScore.total;
-  const grupoPosicaoBonus = calcGrupoPosicaoBonus(name);
-  totalPts += grupoPosicaoBonus;
 
   html += `<div class="mp-stats-row">
     <div class="mp-stat-card"><div class="mp-stat-label">Total</div><div class="mp-stat-val">${totalPts}</div></div>
@@ -2009,62 +2019,17 @@ function renderMeusPalpites() {
     }).sort((a,b)=>b.pts-a.pts||b.sg-a.sg||b.gp-a.gp);
     const melhores3os = new Set(terceiros.slice(0,8).map(t=>t.grupo+'|'+t.name));
 
-    // Calcula acertos por grupo para o card de resumo
-    const resumoGrupos = Object.keys(GRUPOS_DEF).map(g => {
-      const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
-      const real = calcGrupoStats(g);
-      const grupoCompleto = JOGOS.filter(j => j.group === g).every(j => getResultado(j.id));
-      let acertos = 0;
-      if (grupoCompleto) sim.forEach((t,i) => { if (real[i] && real[i].name === t.name) acertos++; });
-      return {g, acertos, completo: grupoCompleto};
-    });
-    const totalAcertosPosGrupo = resumoGrupos.reduce((s,r) => s + r.acertos, 0);
-    const totalPtsPosGrupo = totalAcertosPosGrupo * 2;
-    const gruposCompletos = resumoGrupos.filter(r => r.completo).length;
-
-    html += `<div style="background:var(--verde-escuro);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px">
-      <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:var(--amarelo);letter-spacing:0.5px;margin-bottom:8px">📊 PONTUAÇÃO · POSIÇÃO DE GRUPO</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <div style="background:rgba(245,212,66,0.15);border:1px solid rgba(245,212,66,0.3);border-radius:8px;padding:7px 10px;text-align:center;flex:1">
-          <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Pts Pos. Grupo</div>
-          <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--amarelo)">${totalPtsPosGrupo}</div>
-        </div>
-        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;text-align:center;flex:1">
-          <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Posições Certas</div>
-          <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff">${totalAcertosPosGrupo}<span style="font-size:11px;color:#9fd9a8">/48</span></div>
-        </div>
-        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;text-align:center;flex:1">
-          <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Grupos Fechados</div>
-          <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff">${gruposCompletos}<span style="font-size:11px;color:#9fd9a8">/12</span></div>
-        </div>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px">
-        ${resumoGrupos.map(r => {
-          const cor = !r.completo ? 'rgba(255,255,255,0.1)' : r.acertos === 0 ? 'rgba(220,38,38,0.25)' : r.acertos === 4 ? 'rgba(22,163,74,0.3)' : 'rgba(245,212,66,0.2)';
-          const borda = !r.completo ? 'rgba(255,255,255,0.15)' : r.acertos === 0 ? 'rgba(220,38,38,0.4)' : r.acertos === 4 ? 'rgba(22,163,74,0.5)' : 'rgba(245,212,66,0.4)';
-          const corPts = !r.completo ? '#9fd9a8' : r.acertos === 0 ? '#fca5a5' : r.acertos === 4 ? '#86efac' : 'var(--amarelo)';
-          return `<div style="background:${cor};border:1px solid ${borda};border-radius:6px;padding:4px 8px;display:flex;align-items:center;gap:5px">
-            <span style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:#fff">${r.g}</span>
-            <span style="font-size:10px;font-weight:700;color:${corPts}">${r.completo ? '+'+( r.acertos*2)+'pts' : '—'}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-
     html += `<div class="grupos-grid">`;
     Object.keys(GRUPOS_DEF).forEach(g => {
       const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
-      const real = calcGrupoStats(g);
-      const grupoCompleto = JOGOS.filter(j => j.group === g).every(j => getResultado(j.id));
       html += `<div class="grupo-card"><div class="grupo-titulo">GRUPO ${g}</div>
         <table class="grupo-table"><thead><tr><th class="nome">Seleção</th><th>Pts</th><th>SG</th></tr></thead><tbody>`;
       sim.forEach((t,i) => {
         const melhor3 = i === 2 && melhores3os.has(g+'|'+t.name);
         const cls = i < 2 ? 'classificado' : '';
         const rowStyle = melhor3 ? ' style="background:#fef9c3"' : '';
-        const hit = grupoCompleto && real[i] && real[i].name === t.name;
         html += `<tr class="${cls}"${rowStyle}>
-          <td class="nome">${flag(t.name)} ${t.name}${melhor3?' <span style="font-size:9px;font-weight:700;color:#854d0e;background:#fef08a;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}${hit?' <span style="font-size:9px;font-weight:700;color:#166534;background:#bbf7d0;border-radius:4px;padding:1px 4px;margin-left:4px">+2</span>':''}</td>
+          <td class="nome">${flag(t.name)} ${t.name}${melhor3?' <span style="font-size:9px;font-weight:700;color:#854d0e;background:#fef08a;border-radius:4px;padding:1px 4px;margin-left:4px">8m</span>':''}</td>
           <td>${t.pts}</td><td>${t.sg>0?'+':''}${t.sg}</td>
         </tr>`;
       });
@@ -2072,7 +2037,7 @@ function renderMeusPalpites() {
     });
     html += `</div>`;
     html += `<div style="margin-top:10px;padding:10px 14px;background:#f0fbf5;border-radius:10px;border:1px solid #d0ecd8;font-size:12px;color:var(--muted)">
-      🟢 1° e 2° de cada grupo (classificação direta, fixo) · 🟡 <b>8m</b> = entre os 8 melhores 3° colocados pelo palpite · <b>+2</b> = posição certa (soma no Ranking, só após o grupo terminar)
+      🟢 1° e 2° de cada grupo (classificação direta, fixo) · 🟡 <b>8m</b> = entre os 8 melhores 3° colocados pelo palpite
     </div>`;
   } // fim mpSection === 'grupos'
 
