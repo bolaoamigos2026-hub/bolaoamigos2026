@@ -2024,6 +2024,48 @@ function renderMeusPalpites() {
     }).sort((a,b)=>b.pts-a.pts||b.sg-a.sg||b.gp-a.gp);
     const melhores3os = new Set(terceiros.slice(0,8).map(t=>t.grupo+'|'+t.name));
 
+    // Calcula acertos por grupo para o card de resumo
+    const resumoGrupos = Object.keys(GRUPOS_DEF).map(g => {
+      const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
+      const real = calcGrupoStats(g);
+      const grupoCompleto = JOGOS.filter(j => j.group === g).every(j => getResultado(j.id));
+      let acertos = 0;
+      if (grupoCompleto) sim.forEach((t,i) => { if (real[i] && real[i].name === t.name) acertos++; });
+      return {g, acertos, completo: grupoCompleto};
+    });
+    const totalAcertosPosGrupo = resumoGrupos.reduce((s,r) => s + r.acertos, 0);
+    const totalPtsPosGrupo = totalAcertosPosGrupo * 2;
+    const gruposCompletos = resumoGrupos.filter(r => r.completo).length;
+
+    html += `<div style="background:var(--verde-escuro);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px">
+      <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:var(--amarelo);letter-spacing:0.5px;margin-bottom:8px">📊 PONTUAÇÃO · POSIÇÃO DE GRUPO</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="background:rgba(245,212,66,0.15);border:1px solid rgba(245,212,66,0.3);border-radius:8px;padding:7px 10px;text-align:center;flex:1">
+          <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Pts Pos. Grupo</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:var(--amarelo)">${totalPtsPosGrupo}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;text-align:center;flex:1">
+          <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Posições Certas</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff">${totalAcertosPosGrupo}<span style="font-size:11px;color:#9fd9a8">/48</span></div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 10px;text-align:center;flex:1">
+          <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Grupos Fechados</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff">${gruposCompletos}<span style="font-size:11px;color:#9fd9a8">/12</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${resumoGrupos.map(r => {
+          const cor = !r.completo ? 'rgba(255,255,255,0.1)' : r.acertos === 0 ? 'rgba(220,38,38,0.25)' : r.acertos === 4 ? 'rgba(22,163,74,0.3)' : 'rgba(245,212,66,0.2)';
+          const borda = !r.completo ? 'rgba(255,255,255,0.15)' : r.acertos === 0 ? 'rgba(220,38,38,0.4)' : r.acertos === 4 ? 'rgba(22,163,74,0.5)' : 'rgba(245,212,66,0.4)';
+          const corPts = !r.completo ? '#9fd9a8' : r.acertos === 0 ? '#fca5a5' : r.acertos === 4 ? '#86efac' : 'var(--amarelo)';
+          return `<div style="background:${cor};border:1px solid ${borda};border-radius:6px;padding:4px 8px;display:flex;align-items:center;gap:5px">
+            <span style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:#fff">${r.g}</span>
+            <span style="font-size:10px;font-weight:700;color:${corPts}">${r.completo ? '+'+( r.acertos*2)+'pts' : '—'}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
     html += `<div class="grupos-grid">`;
     Object.keys(GRUPOS_DEF).forEach(g => {
       const sim = calcGrupoStatsFromPicks(g, PALPITES[name]);
