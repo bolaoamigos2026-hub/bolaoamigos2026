@@ -425,6 +425,34 @@
   .acc-item.exato { background: #dcfce7; border-color: #86efac; }
   .acc-item.certo { background: #fef9c3; border-color: #fde68a; }
   .acc-item.errado { background: #fee2e2; border-color: #fca5a5; }
+
+  /* ===== Compilado - cards compartilháveis ===== */
+  .share-mode-toggle { display:flex; gap:8px; margin-bottom:18px; }
+  .share-mode-toggle button {
+    flex:1; padding:9px 10px; border-radius:9px; border:1.5px solid var(--border);
+    background:#fff; color:var(--texto); font-weight:700; font-size:12px; cursor:pointer;
+  }
+  .share-mode-toggle button.active { background:var(--verde-escuro); color:var(--amarelo); border-color:var(--verde-escuro); }
+  .share-card { background:var(--verde-escuro); border-radius:18px; overflow:hidden; margin-bottom:22px; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+  .share-card-top { padding:18px 18px 12px; text-align:center; border-bottom:3px solid var(--amarelo); }
+  .share-top-label { font-size:10px; font-weight:800; letter-spacing:1.8px; color:var(--amarelo); text-transform:uppercase; }
+  .share-top-date { font-family:'Oswald',sans-serif; font-size:24px; font-weight:800; color:#fff; margin-top:5px; }
+  .share-top-sub { font-size:12px; color:#a8c9b3; margin-top:3px; }
+  .share-card-body { background:var(--verde-campo); padding:16px; }
+  .share-match-row { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+  .share-badge { background:var(--amarelo); color:var(--verde-escuro); font-weight:800; font-size:11px; padding:3px 9px; border-radius:8px; }
+  .share-team { color:#fff; font-weight:800; font-size:17px; }
+  .share-x { color:#bcdcc4; font-size:13px; }
+  .share-result { text-align:center; font-family:'Oswald',sans-serif; font-size:20px; font-weight:800; color:var(--amarelo); margin:6px 0 8px; }
+  .share-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px 6px; margin-top:12px; }
+  .share-pcell { text-align:center; }
+  .share-pname { font-size:11px; font-weight:800; color:#9fc7ab; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .share-pscore { font-family:'Oswald',sans-serif; font-size:23px; font-weight:800; color:var(--amarelo); line-height:1; }
+  .share-pscore.ok { color:#4ade80; }
+  .share-pscore.no { color:#f87171; }
+  .share-ppts { font-size:9px; font-weight:700; color:#c8e6cf; margin-top:2px; }
+  .share-save-btn { display:block; width:100%; padding:10px; background:var(--amarelo); color:var(--verde-escuro); font-weight:800; border:none; cursor:pointer; font-size:12px; }
+  .share-save-btn:disabled { opacity:0.6; cursor:default; }
   .acc-save-btn {
     font-size: 10px; font-weight: 700; padding: 4px 10px;
     border-radius: 5px; border: 1.5px solid var(--border);
@@ -605,7 +633,11 @@
   <!-- COMPILADO -->
   <div id="page-compilado" class="page">
     <div class="section-header">📑 Compilado de Palpites · Mata-Mata</div>
-    <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px">Todos os jogos do mata-mata com os palpites de todo mundo já abertos, pra facilitar print/compartilhamento.</div>
+    <div style="font-size:11px;color:var(--muted);margin:-8px 0 14px">Um card por jogo, pronto pra compartilhar.</div>
+    <div class="share-mode-toggle">
+      <button id="compilado-btn-antes" onclick="setCompiladoModo('antes')">📋 Antes (só palpites)</button>
+      <button id="compilado-btn-depois" onclick="setCompiladoModo('depois')">✅ Depois (com resultado)</button>
+    </div>
     <div id="compilado-container"></div>
   </div>
 
@@ -2318,59 +2350,129 @@ function buildMMParticipantsGrid(id) {
   return html;
 }
 
+let compiladoModo = 'antes';
+
+function setCompiladoModo(modo) {
+  compiladoModo = modo;
+  renderCompilado();
+}
+
 function renderCompilado() {
   const container = document.getElementById('compilado-container');
   if (!container) return;
+
+  const btnAntes = document.getElementById('compilado-btn-antes');
+  const btnDepois = document.getElementById('compilado-btn-depois');
+  if (btnAntes) btnAntes.classList.toggle('active', compiladoModo === 'antes');
+  if (btnDepois) btnDepois.classList.toggle('active', compiladoModo === 'depois');
 
   const allBracketMatches = [...BRACKET.r16, ...BRACKET.qf, ...BRACKET.sf, ...BRACKET.final, ...BRACKET.third, ...BRACKET.champion];
 
   let html = '';
   FASES_MM_DEF.forEach(fase => {
-    html += `<div class="day-block">
-      <div class="day-header">
-        <div class="day-label">${fase.emoji} ${fase.label}</div>
-        <div class="day-line"></div>
-      </div>`;
-
     fase.ids.forEach(id => {
-      const g = STATE.gabarito_mm[id];
-      const bracketMatch = allBracketMatches.find(m => m.id === id);
-      const bracketLabel = bracketMatch ? bracketMatch.label : `J${id}`;
-      const hasTeams = g && g.timeA && g.timeA.trim() !== '' && !/^[W12]/.test(g.timeA) && !g.timeA.startsWith('RU');
-      const tA = hasTeams ? g.timeA : bracketLabel.split('×')[0].trim();
-      const tB = hasTeams ? g.timeB : (bracketLabel.split('×')[1]||'').trim();
-      const fA = hasTeams ? flag(tA) : '';
-      const fB = hasTeams ? flag(tB) : '';
-      const hasRes = g && g.golsA !== null;
-      let scoreHtml;
-      if (hasRes) {
-        let sc = `${g.golsA} × ${g.golsB}`;
-        if (g.penaltisA !== null) sc += ` <span style="font-size:11px;opacity:0.8">(${g.penaltisA}–${g.penaltisB} pen)</span>`;
-        scoreHtml = `<div class="visitor-result-display">${sc}</div>`;
-      } else {
-        scoreHtml = `<span class="visitor-pending">a jogar</span>`;
-      }
-      const faseBadge = id === 104 ? '🏆 Final' : id === 103 ? '3º Lugar' : `J${id}`;
-      const date = FASE_DATES[id] ? FASE_DATES[id] : '';
-
-      html += `<div class="jogo-card" id="jogo-card-compilado-${id}">
-          <span class="jogo-num" style="font-size:9px;color:#bbb">${date}</span>
-          <span class="jogo-grupo" style="font-size:9px;white-space:nowrap">${faseBadge}</span>
-          <div class="jogo-times">
-            <span class="time-flag">${fA}</span>
-            <span class="time-nome left">${tA}</span>
-            ${scoreHtml}
-            <span class="time-nome right">${tB}</span>
-            <span class="time-flag">${fB}</span>
-          </div>
-        </div>
-        <div style="margin:2px 0 14px">${buildMMParticipantsGrid(id)}</div>`;
+      html += buildShareCard(id, fase, allBracketMatches);
     });
-
-    html += '</div>';
   });
 
   container.innerHTML = html;
+}
+
+function buildShareCard(id, fase, allBracketMatches) {
+  const g = STATE.gabarito_mm[id];
+  const bracketMatch = allBracketMatches.find(m => m.id === id);
+  const bracketLabel = bracketMatch ? bracketMatch.label : `J${id}`;
+  const hasTeams = g && g.timeA && g.timeA.trim() !== '' && !/^[W12]/.test(g.timeA) && !g.timeA.startsWith('RU');
+  const tA = hasTeams ? g.timeA : bracketLabel.split('×')[0].trim();
+  const tB = hasTeams ? g.timeB : (bracketLabel.split('×')[1]||'').trim();
+  const fA = hasTeams ? flag(tA) : '';
+  const fB = hasTeams ? flag(tB) : '';
+  const hasRes = g && g.golsA !== null;
+  const faseBadge = id === 104 ? '🏆 Final' : id === 103 ? '3º Lugar' : `J${id}`;
+  const date = FASE_DATES[id] ? FASE_DATES[id] : '';
+  const modo = compiladoModo;
+
+  let resultadoHtml = '';
+  if (modo === 'depois' && hasRes) {
+    let sc = `${g.golsA} × ${g.golsB}`;
+    if (g.penaltisA !== null) sc += ` (${g.penaltisA}–${g.penaltisB}p)`;
+    resultadoHtml = `<div class="share-result">${sc}</div>`;
+  } else if (modo === 'depois' && !hasRes) {
+    resultadoHtml = `<div class="share-result" style="color:#cfe8d6;font-size:13px">a jogar</div>`;
+  }
+
+  let gridHtml = `<div class="share-grid">`;
+  PARTICIPANTES.forEach(n => {
+    const palp = (PALPITES_MM[n] || []).find(p => p.id === id);
+    if (!palp) {
+      gridHtml += `<div class="share-pcell">
+        <div class="share-pname">${n.split(' ')[0]}</div>
+        <div class="share-pscore" style="opacity:0.4">—</div>
+      </div>`;
+      return;
+    }
+    let scoreStr = `${palp.golsA}-${palp.golsB}`;
+    if (palp.penaltisA !== null) scoreStr += ` <span style="font-size:12px">(${palp.penaltisA}-${palp.penaltisB}p)</span>`;
+
+    let scoreCls = '';
+    let ptsHtml = '';
+    if (modo === 'depois' && hasRes) {
+      const pts = calcMMScore(palp, g);
+      if (pts === 8) scoreCls = 'ok';
+      else if (pts === 0) scoreCls = 'no';
+      ptsHtml = `<div class="share-ppts">${pts > 0 ? '+' + pts : '0'} pts</div>`;
+    }
+
+    gridHtml += `<div class="share-pcell">
+      <div class="share-pname">${n.split(' ')[0]}</div>
+      <div class="share-pscore ${scoreCls}">${scoreStr}</div>
+      ${ptsHtml}
+    </div>`;
+  });
+  gridHtml += `</div>`;
+
+  return `<div class="share-card" id="share-card-${id}">
+    <div class="share-card-top">
+      <div class="share-top-label">Bolão Copa Du MunDu 2026</div>
+      <div class="share-top-date">${fase.emoji} ${fase.label}</div>
+      <div class="share-top-sub">${modo === 'antes' ? 'Palpites do jogo' : 'Resultado e pontos'}</div>
+    </div>
+    <div class="share-card-body">
+      <div class="share-match-row">
+        <span class="share-badge">${faseBadge}${date ? ' · ' + date : ''}</span>
+      </div>
+      <div class="share-match-row">
+        <span class="share-team">${fA} ${tA}</span>
+        <span class="share-x">×</span>
+        <span class="share-team">${tB} ${fB}</span>
+      </div>
+      ${resultadoHtml}
+      ${gridHtml}
+    </div>
+    <button class="share-save-btn" id="share-save-${id}" onclick="saveShareCardImage(${id})">📷 Salvar imagem</button>
+  </div>`;
+}
+
+async function saveShareCardImage(id) {
+  const card = document.getElementById('share-card-' + id);
+  if (!card) return;
+  const btn = document.getElementById('share-save-' + id);
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  const clone = card.cloneNode(true);
+  const cloneBtn = clone.querySelector('.share-save-btn');
+  if (cloneBtn) cloneBtn.remove();
+  clone.style.cssText += ';position:fixed;left:-9999px;top:0;width:420px';
+  document.body.appendChild(clone);
+  try {
+    const canvas = await html2canvas(clone, {scale:3, useCORS:true, backgroundColor:'#0a3622', logging:false});
+    const link = document.createElement('a');
+    link.download = `compilado_jogo${id}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } finally {
+    document.body.removeChild(clone);
+    btn.disabled = false; btn.textContent = '📷 Salvar imagem';
+  }
 }
 
 function toggleAccordionMM(e, id) {
