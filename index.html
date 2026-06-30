@@ -422,6 +422,9 @@
   .acc-score.certo { color: #854d0e; background: #fef9c3; border-radius: 4px; padding: 1px 4px; }
   .acc-score.errado { color: #ccc; }
   .acc-score.sem-resultado { color: #aaa; }
+  .acc-item.exato { background: #dcfce7; border-color: #86efac; }
+  .acc-item.certo { background: #fef9c3; border-color: #fde68a; }
+  .acc-item.errado { background: #fee2e2; border-color: #fca5a5; }
   .acc-save-btn {
     font-size: 10px; font-weight: 700; padding: 4px 10px;
     border-radius: 5px; border: 1.5px solid var(--border);
@@ -617,15 +620,18 @@
       <div class="grupo-titulo">🏆 Mata-Mata</div>
       <table class="grupo-table">
         <tbody>
-          <tr><td class="nome">Acertou os 2 times e o placar exato</td><td style="text-align:right;font-weight:700">8 pts</td></tr>
-          <tr><td class="nome">Acertou 1 dos times e o placar exato</td><td style="text-align:right;font-weight:700">4 pts</td></tr>
-          <tr><td class="nome">Acertou os 2 times, sem o placar exato</td><td style="text-align:right;font-weight:700">4 pts</td></tr>
-          <tr><td class="nome">Acertou 1 dos times, sem o placar exato</td><td style="text-align:right;font-weight:700">2 pts</td></tr>
-          <tr><td class="nome">Errou os 2 times, mas acertou o placar exato</td><td style="text-align:right;font-weight:700">1 pt</td></tr>
+          <tr><td class="nome">Acertou os 2 times e o placar exato (com pênalti exato, se for o caso)</td><td style="text-align:right;font-weight:700">8 pts</td></tr>
+          <tr><td class="nome">Acertou os 2 times e o placar exato do empate, mas errou o pênalti</td><td style="text-align:right;font-weight:700">6 pts</td></tr>
+          <tr><td class="nome">Acertou os 2 times e que ia empatar, sem o placar exato</td><td style="text-align:right;font-weight:700">5 pts</td></tr>
+          <tr><td class="nome">Acertou os 2 times, sem acertar que ia empatar</td><td style="text-align:right;font-weight:700">4 pts</td></tr>
+          <tr><td class="nome">Acertou 1 dos times e o placar exato (com pênalti exato, se for o caso)</td><td style="text-align:right;font-weight:700">4 pts</td></tr>
+          <tr><td class="nome">Acertou 1 dos times e o placar exato do empate (pênalti errado), ou que ia empatar sem placar exato</td><td style="text-align:right;font-weight:700">3 pts</td></tr>
+          <tr><td class="nome">Acertou 1 dos times, sem acertar que ia empatar</td><td style="text-align:right;font-weight:700">2 pts</td></tr>
+          <tr><td class="nome">Errou os 2 times, mas acertou o placar do tempo normal</td><td style="text-align:right;font-weight:700">1 pt</td></tr>
           <tr><td class="nome">Errou tudo</td><td style="text-align:right;font-weight:700">0 pts</td></tr>
         </tbody>
       </table>
-      <div style="padding:8px 14px 12px;font-size:11px;color:var(--muted)">"Placar exato" considera o tempo normal e, quando o jogo vai aos pênaltis, considera também o placar dos pênaltis. Vale também pro jogo de 3º lugar.</div>
+      <div style="padding:8px 14px 12px;font-size:11px;color:var(--muted)">"Placar exato" considera o tempo normal e, quando o jogo vai aos pênaltis, considera também o placar dos pênaltis. Empate só é possível quando o jogo realmente foi a pênaltis. Vale também pro jogo de 3º lugar.</div>
 
       <!-- Novo Placar Formulário -->
       <div style="margin:4px 10px 14px;border:2px solid var(--amarelo);border-radius:10px;overflow:hidden">
@@ -636,11 +642,19 @@
         <table class="grupo-table" style="margin:0">
           <tbody>
             <tr>
-              <td class="nome" style="font-size:13px;font-weight:700;padding:9px 12px">Acertou o vencedor e o placar exato</td>
+              <td class="nome" style="font-size:13px;font-weight:700;padding:9px 12px">Placar exato (com pênalti exato, se for o caso)</td>
               <td style="text-align:right;font-weight:800;font-size:15px;padding:9px 12px;color:var(--amarelo)">+3 pts</td>
             </tr>
             <tr>
-              <td class="nome" style="font-size:13px;font-weight:700;padding:9px 12px">Acertou o vencedor</td>
+              <td class="nome" style="font-size:13px;font-weight:700;padding:9px 12px">Placar exato do empate, mas errou o pênalti</td>
+              <td style="text-align:right;font-weight:800;font-size:15px;padding:9px 12px;color:var(--amarelo)">+2 pts</td>
+            </tr>
+            <tr>
+              <td class="nome" style="font-size:13px;font-weight:700;padding:9px 12px">Acertou que ia empatar, sem o placar exato</td>
+              <td style="text-align:right;font-weight:800;font-size:15px;padding:9px 12px;color:var(--amarelo)">+1 pt</td>
+            </tr>
+            <tr>
+              <td class="nome" style="font-size:13px;font-weight:700;padding:9px 12px">Acertou o vencedor (jogo sem pênaltis)</td>
               <td style="text-align:right;font-weight:800;font-size:15px;padding:9px 12px;color:var(--amarelo)">+1 pt</td>
             </tr>
           </tbody>
@@ -947,7 +961,7 @@ function scoreFor(name) {
     const gab = STATE.gabarito_mm[palp.id];
     if (!gab || gab.golsA === null) return;
     const mmPts = calcMMScore(palp, gab);
-    ptsForm += calcFormScoreFor(name, palp.id, mmPts, gab);
+    ptsForm += capFormBonus(mmPts, calcFormScoreFor(name, palp.id, palp, gab));
   });
   const total = ptsJogos + ptsMM + ptsForm;
   return {total, exatos, certos, jogosComResultado, ptsJogos, ptsMM, ptsForm};
@@ -1421,15 +1435,24 @@ function bracketCardMC(matchId, labelFallback, isFinal, picks, participantName) 
   const bgA  = realHasTeams && acertouA ? '#dcfce7' : 'transparent';
   const bgB  = realHasTeams && acertouB ? '#dcfce7' : 'transparent';
   const pts = hasRealResult ? calcMMScore(p, real) : null;
+  const placarExato = hasRealResult && isMMFullExact(p, real);
+  const cardMaximo = pts === 8;
 
   let scoreStr = `${p.golsA}–${p.golsB}`;
   if (p.penaltisA !== null) scoreStr += ` (${p.penaltisA}–${p.penaltisB}p)`;
 
-  return `<div style="background:${bg};border:1.5px solid ${borderColor};border-radius:9px;padding:7px 10px;min-width:130px;max-width:160px;font-size:11px;font-weight:600;color:var(--texto);box-shadow:var(--shadow)">
+  const bonusA = acertouA ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
+  const bonusB = acertouB ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
+  const corPlacarCard = placarExato ? '#166534' : 'var(--verde-escuro)';
+  const bonusPlacar = placarExato ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
+  const bgCard = cardMaximo ? '#dcfce7' : bg;
+  const borderCard = cardMaximo ? '#86efac' : borderColor;
+
+  return `<div style="background:${bgCard};border:1.5px solid ${borderCard};border-radius:9px;padding:7px 10px;min-width:130px;max-width:160px;font-size:11px;font-weight:600;color:var(--texto);box-shadow:var(--shadow)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">${date}<span style="font-size:9px;color:#bbb">J${matchId}</span></div>
-    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corA};background:${bgA};border-radius:4px;padding:0 2px">${flag(p.timeA)} ${p.timeA}</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:var(--verde-escuro);text-align:center;margin:2px 0">${scoreStr}</div>
-    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corB};background:${bgB};border-radius:4px;padding:0 2px">${flag(p.timeB)} ${p.timeB}</div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corA};background:${bgA};border-radius:4px;padding:0 2px">${flag(p.timeA)} ${p.timeA}${bonusA}</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:${corPlacarCard};text-align:center;margin:2px 0">${scoreStr}${bonusPlacar}</div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corB};background:${bgB};border-radius:4px;padding:0 2px">${flag(p.timeB)} ${p.timeB}${bonusB}</div>
     ${pts!==null ? `<div style="text-align:right;font-size:9px;font-weight:700;color:${pts>0?'#166534':'#ccc'};margin-top:2px">MM: ${pts>0?'+'+pts:'0'} pts</div>` : ''}
     ${(()=>{
       if (!participantName) return '';
@@ -1438,18 +1461,19 @@ function bracketCardMC(matchId, labelFallback, isFinal, picks, participantName) 
       const hasRes = !!(STATE.gabarito_mm[matchId] && STATE.gabarito_mm[matchId].golsA !== null);
       const fpStr = `${fp.gA}–${fp.gB}${fp.penA!==undefined?` (${fp.penA}–${fp.penB}p)`:''}`;
       const fpMmPts = hasRes ? calcMMScore(p, STATE.gabarito_mm[matchId]) : null;
-      const fpFormPts = hasRes ? calcFormScoreFor(participantName, matchId, fpMmPts, STATE.gabarito_mm[matchId]) : null;
+      const fpFormPts = hasRes ? calcFormScoreFor(participantName, matchId, p, STATE.gabarito_mm[matchId]) : null;
       let fpBg, fpBorder, fpColor, fpEmoji;
       if (!hasRes) {
         fpBg='#f3e8ff'; fpBorder='#d8b4fe'; fpColor='#6b21a8'; fpEmoji='📋';
       } else if (fpFormPts === 3) {
         fpBg='#dcfce7'; fpBorder='#86efac'; fpColor='#166534'; fpEmoji='✅';
-      } else if (fpFormPts === 1) {
-        fpBg='#fef9c3'; fpBorder='#fde68a'; fpColor='#92400e'; fpEmoji='🟡';
-      } else {
+      } else if (fpFormPts === 0) {
         fpBg='#fee2e2'; fpBorder='#fca5a5'; fpColor='#dc2626'; fpEmoji='❌';
+      } else {
+        fpBg='#fef9c3'; fpBorder='#fde68a'; fpColor='#92400e'; fpEmoji='🟡';
       }
-      const fpPts = fpFormPts !== null ? (fpFormPts > 0 ? ` +${fpFormPts}pts` : '') : '';
+      const fpPtsCapped = hasRes ? capFormBonus(fpMmPts, fpFormPts) : null;
+      const fpPts = fpPtsCapped !== null ? (fpPtsCapped > 0 ? ` +${fpPtsCapped}pts` : '') : '';
       return `<div style="margin-top:3px;background:${fpBg};border:1px solid ${fpBorder};border-radius:4px;padding:2px 4px;font-size:9px;font-weight:700;color:${fpColor};text-align:center">${fpEmoji} Form: ${fpStr}${fpPts}</div>`;
     })()}
   </div>`;
@@ -1813,30 +1837,59 @@ function calcFormScore(matchId, ptsMM, gab) {
   return 0; // será sobrescrito por calcFormScoreFor
 }
 
-function calcFormScoreFor(name, matchId, ptsMM, gab) {
-  if (ptsMM === null || ptsMM > 4) return 0;
+function isMMFullExact(palp, gab) {
+  if (!gab || gab.golsA === null || gab.golsB === null) return false;
+  if (!palp) return false;
+  const wentToPens = gab.penaltisA !== null;
+  const exactScore = palp.golsA === gab.golsA && palp.golsB === gab.golsB;
+  const exactPen = wentToPens && palp.penaltisA !== null &&
+    palp.penaltisA === gab.penaltisA && palp.penaltisB === gab.penaltisB;
+  return exactScore && (!wentToPens || exactPen);
+}
+
+function capFormBonus(mmPts, formPts) {
+  // O placar da planilha tem que ser sempre a maior nota: o bônus do
+  // formulário nunca pode levar o total da partida (MM + Form) acima de 7,
+  // a menos que a planilha já tenha feito o máximo (8) sozinha.
+  if (mmPts === null || formPts === null) return formPts;
+  if (mmPts >= 8) return 0;
+  return Math.max(0, Math.min(formPts, 7 - mmPts));
+}
+
+function calcFormScoreFor(name, matchId, palpMM, gab) {
+  // Bônus do formulário só não vale se o palpite antigo (planilha) já
+  // acertou o placar 100% (exato, com pênalti exato se for o caso).
+  if (isMMFullExact(palpMM, gab)) return 0;
   if (!gab || gab.golsA === null || gab.golsB === null) return 0;
 
   const fp = (PALPITES_FORM[name] || {})[matchId];
   if (!fp) return 0;
 
-  // Determina vencedor real
-  function winner(golsA, golsB, penA, penB) {
-    if (golsA > golsB) return 'A';
-    if (golsB > golsA) return 'B';
-    if (penA !== null && penB !== null) return penA > penB ? 'A' : 'B';
-    return null;
-  }
-
-  const realWinner = winner(gab.golsA, gab.golsB, gab.penaltisA, gab.penaltisB);
-  const formWinner = winner(fp.gA, fp.gB, fp.penA ?? null, fp.penB ?? null);
-
+  const wentToPens = gab.penaltisA !== null;
   const exactScore = fp.gA === gab.golsA && fp.gB === gab.golsB;
-  const exactPen   = gab.penaltisA !== null && fp.penA !== undefined &&
+  const exactPen   = wentToPens && fp.penA !== undefined &&
                      fp.penA === gab.penaltisA && fp.penB === gab.penaltisB;
-  const fullExact  = exactScore && (gab.penaltisA === null || exactPen);
+  const fullExact  = exactScore && (!wentToPens || exactPen);
 
   if (fullExact) return 3;
+
+  if (wentToPens) {
+    // Empate é condição obrigatória pra ir aos pênaltis: só faz sentido
+    // comparar pênaltis se o participante também chutou empate.
+    const guessedDraw = fp.gA === fp.gB;
+    if (exactScore) return 2; // placar exato (empate certo), pênaltis errados
+    if (guessedDraw) return 1; // acertou que ia empatar, placar não exato
+    return 0;
+  }
+
+  // Jogo decidido no tempo normal: vale a regra antiga (vencedor certo = 1pt)
+  function winner(golsA, golsB) {
+    if (golsA > golsB) return 'A';
+    if (golsB > golsA) return 'B';
+    return null;
+  }
+  const realWinner = winner(gab.golsA, gab.golsB);
+  const formWinner = winner(fp.gA, fp.gB);
   if (realWinner && formWinner === realWinner) return 1;
   return 0;
 }
@@ -1864,10 +1917,16 @@ function calcMMScore(palp, gab) {
 
   // Check exact score (tempo normal only)
   const exactScore = palp.golsA === gab.golsA && palp.golsB === gab.golsB;
+  const wentToPens = gab.penaltisA !== null;
   // Check exact penaltis (only when both have penaltis)
-  const exactPen = gab.penaltisA !== null && palp.penaltisA !== null &&
+  const exactPen = wentToPens && palp.penaltisA !== null &&
     palp.penaltisA === gab.penaltisA && palp.penaltisB === gab.penaltisB;
-  const fullExact = exactScore && (gab.penaltisA === null || exactPen);
+  const fullExact = exactScore && (!wentToPens || exactPen);
+  // Placar exato do empate (ex: real 1x1, chutou 1x1), mas errou o pênalti
+  const exactScoreWrongPen = wentToPens && exactScore && !exactPen;
+  // Empate é condição obrigatória pra ir aos pênaltis: só conta "acertou
+  // que ia empatar" quando o jogo realmente foi a pênaltis.
+  const guessedDrawOnly = wentToPens && palp.golsA === palp.golsB && !exactScore;
 
   // Slot match: both teams same (order matters)
   const both = palpTimes[0] === gabTimes[0] && palpTimes[1] === gabTimes[1];
@@ -1876,12 +1935,20 @@ function calcMMScore(palp, gab) {
   const oneB = palpTimes[1] === gabTimes[1];
   const one = oneA || oneB;
 
-  // A Final segue exatamente os mesmos critérios do Mata-Mata (sem bônus especial de placar)
-  if (both && fullExact) return 8;
-  if (one && fullExact) return 4;
-  if (both) return 4;
-  if (one) return 2;
-  if (fullExact) return 1;
+  if (both) {
+    if (fullExact) return 8;
+    if (exactScoreWrongPen) return 6;
+    if (guessedDrawOnly) return 5;
+    return 4;
+  }
+  if (one) {
+    if (fullExact) return 4;
+    if (exactScoreWrongPen || guessedDrawOnly) return 3;
+    return 2;
+  }
+  // Nenhum time certo: vale acertar só o placar do tempo normal,
+  // pênalti não precisa bater (já que os times nem são os do jogo real).
+  if (exactScore) return 1;
   return 0;
 }
 
@@ -2184,7 +2251,7 @@ function toggleAccordionMM(e, id) {
     let cardCls = 'sem-resultado';
     if (hasRes || gabHasTeams) {
       if (pts === null) cardCls = 'sem-resultado';
-      else if (acertouA && acertouB && placarExato) cardCls = 'exato';
+      else if (pts === 8) cardCls = 'exato';
       else if (pts > 0) cardCls = 'certo';
       else cardCls = 'errado';
     }
@@ -2194,10 +2261,13 @@ function toggleAccordionMM(e, id) {
     const corB = gabHasTeams ? (acertouB ? '#166534' : '#888') : '#555';
     const bgA  = gabHasTeams ? (acertouA ? '#dcfce7' : 'transparent') : 'transparent';
     const bgB  = gabHasTeams ? (acertouB ? '#dcfce7' : 'transparent') : 'transparent';
+    const bonusA = acertouA ? ` <span style="font-size:8px">+2</span>` : '';
+    const bonusB = acertouB ? ` <span style="font-size:8px">+2</span>` : '';
 
     // Cor do placar
     const corPlacar = placarExato ? '#166534' : (hasRes ? '#888' : '#555');
     const bgPlacar  = placarExato ? '#dcfce7' : 'transparent';
+    const bonusPlacar = placarExato ? ` <span style="font-size:8px">+2</span>` : '';
 
     // Montar placar string
     let scoreStr = `${palp.golsA}–${palp.golsB}`;
@@ -2210,30 +2280,31 @@ function toggleAccordionMM(e, id) {
     html += `<div class="acc-item ${cardCls}" style="min-width:0;gap:3px;padding:7px 8px">
       <span class="acc-nome">${n.split(' ')[0]}</span>
       <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:2px">
-        <span style="font-size:10px;font-weight:700;color:${corA};background:${bgA};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeA||'?'}</span>
+        <span style="font-size:10px;font-weight:700;color:${corA};background:${bgA};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeA||'?'}${bonusA}</span>
         <span style="font-size:9px;color:#bbb">×</span>
-        <span style="font-size:10px;font-weight:700;color:${corB};background:${bgB};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeB||'?'}</span>
+        <span style="font-size:10px;font-weight:700;color:${corB};background:${bgB};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeB||'?'}${bonusB}</span>
       </div>
-      <span style="font-size:12px;font-weight:700;color:${corPlacar};background:${bgPlacar};border-radius:4px;padding:1px 6px;margin-top:2px">${scoreStr}</span>
+      <span style="font-size:12px;font-weight:700;color:${corPlacar};background:${bgPlacar};border-radius:4px;padding:1px 6px;margin-top:2px">${scoreStr}${bonusPlacar}</span>
       ${ptsStr ? `<span style="font-size:9px;font-weight:700;color:${ptsCor}">${ptsStr} pts</span>` : ''}
       ${(()=>{
         const fp = (PALPITES_FORM[n] || {})[id];
         if (!fp) return '';
         const fpStr = `${fp.gA}–${fp.gB}${fp.penA!==undefined?` (${fp.penA}–${fp.penB}p)`:''}`;
         const fpMmPts = hasRes ? calcMMScore(palp, gab) : null;
-        const fpFormPts = hasRes ? calcFormScoreFor(n, id, fpMmPts, gab) : null;
-        // Cor: roxo=sem resultado, verde=acertou tudo, amarelo=só vencedor, vermelho=errou
+        const fpFormPts = hasRes ? calcFormScoreFor(n, id, palp, gab) : null;
+        // Cor: roxo=sem resultado, verde=acertou tudo, amarelo=parcial, vermelho=errou
         let fpBg, fpBorder, fpColor, fpEmoji;
         if (!hasRes) {
           fpBg='#f3e8ff'; fpBorder='#d8b4fe'; fpColor='#6b21a8'; fpEmoji='📋';
         } else if (fpFormPts === 3) {
           fpBg='#dcfce7'; fpBorder='#86efac'; fpColor='#166534'; fpEmoji='✅';
-        } else if (fpFormPts === 1) {
-          fpBg='#fef9c3'; fpBorder='#fde68a'; fpColor='#92400e'; fpEmoji='🟡';
-        } else {
+        } else if (fpFormPts === 0) {
           fpBg='#fee2e2'; fpBorder='#fca5a5'; fpColor='#dc2626'; fpEmoji='❌';
+        } else {
+          fpBg='#fef9c3'; fpBorder='#fde68a'; fpColor='#92400e'; fpEmoji='🟡';
         }
-        const fpPtsBadge = fpFormPts !== null ? (fpFormPts > 0 ? ` <span style="font-weight:700">+${fpFormPts}pts</span>` : '') : '';
+        const fpPtsCapped = hasRes ? capFormBonus(fpMmPts, fpFormPts) : null;
+        const fpPtsBadge = fpPtsCapped !== null ? (fpPtsCapped > 0 ? ` <span style="font-weight:700">+${fpPtsCapped}pts</span>` : '') : '';
         return `<div style="margin-top:4px;background:${fpBg};border:1px solid ${fpBorder};border-radius:5px;padding:2px 6px;font-size:9px;font-weight:700;color:${fpColor};text-align:center">${fpEmoji} ${fpStr}${fpPtsBadge}</div>`;
       })()}
     </div>`;
@@ -2325,7 +2396,7 @@ function renderMeusPalpites() {
     const gab = STATE.gabarito_mm[palp.id];
     if (!gab || gab.golsA === null) return;
     const mmPts = calcMMScore(palp, gab);
-    ptsForm += calcFormScoreFor(name, palp.id, mmPts, gab);
+    ptsForm += capFormBonus(mmPts, calcFormScoreFor(name, palp.id, palp, gab));
   });
   totalPts += mmScore.total + ptsForm;
 
