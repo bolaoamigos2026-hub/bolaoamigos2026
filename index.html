@@ -1906,9 +1906,9 @@ function capFormBonus(mmPts, formPts) {
 }
 
 function calcFormScoreFor(name, matchId, palpMM, gab) {
-  // Bônus do formulário só não vale se o palpite antigo (planilha) já
-  // acertou o placar 100% (exato, com pênalti exato se for o caso).
-  if (isMMFullExact(palpMM, gab)) return 0;
+  // O teto (planilha + form <= 7, exceto cravada 8) é controlado só pelo
+  // capFormBonus. Aqui não deve ter gate baseado em isMMFullExact, senão
+  // zera o bônus até quando os TIMES da planilha erraram (bug do Guilherme).
   if (!gab || gab.golsA === null || gab.golsB === null) return 0;
 
   const fp = (PALPITES_FORM[name] || {})[matchId];
