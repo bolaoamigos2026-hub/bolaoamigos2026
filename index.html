@@ -1482,11 +1482,8 @@ function bracketCardMC(matchId, labelFallback, isFinal, picks, participantName) 
   let scoreStr = `${p.golsA}–${p.golsB}`;
   if (p.penaltisA !== null) scoreStr += ` (${p.penaltisA}–${p.penaltisB}p)`;
 
-  const bonusA = acertouA ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
-  const bonusB = acertouB ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
   const corPlacarCard = placarExato ? '#166534' : 'var(--verde-escuro)';
-  const bonusPlacar = placarExato ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
-  const bonusMax = cardMaximo ? `<div style="text-align:center;font-size:9px;font-weight:700;color:#166534">Cravada +2</div>` : '';
+  const bonusMax = cardMaximo ? `<div style="text-align:center;font-size:9px;font-weight:700;color:#166534">Cravada</div>` : '';
   const bgCard = cardMaximo ? '#dcfce7' : bg;
   const borderCard = cardMaximo ? '#86efac' : borderColor;
 
@@ -1498,9 +1495,9 @@ function bracketCardMC(matchId, labelFallback, isFinal, picks, participantName) 
 
   return `<div style="background:${bgCard};border:1.5px solid ${borderCard};border-radius:9px;padding:7px 10px;min-width:130px;max-width:160px;font-size:11px;font-weight:600;color:var(--texto);box-shadow:var(--shadow)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">${date}<span style="font-size:9px;color:#bbb">J${matchId}</span></div>
-    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corA};background:${bgA};border-radius:4px;padding:0 2px">${flag(p.timeA)} ${p.timeA}${bonusA}</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:${corPlacarCard};text-align:center;margin:2px 0">${scoreStr}${bonusPlacar}</div>
-    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corB};background:${bgB};border-radius:4px;padding:0 2px">${flag(p.timeB)} ${p.timeB}${bonusB}</div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corA};background:${bgA};border-radius:4px;padding:0 2px">${flag(p.timeA)} ${p.timeA}</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:${corPlacarCard};text-align:center;margin:2px 0">${scoreStr}</div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:${corB};background:${bgB};border-radius:4px;padding:0 2px">${flag(p.timeB)} ${p.timeB}</div>
     ${bonusMax}
     ${totalCombinado!==null ? `<div style="text-align:right;font-size:9px;font-weight:800;color:${totalCombinado>0?'#166534':'#ccc'};margin-top:2px">TT: ${totalCombinado} pts</div>` : ''}
     ${(()=>{
@@ -2290,21 +2287,18 @@ function buildMMParticipantsGrid(id) {
       else cardCls = 'errado';
     }
 
-    // Cor individual dos times + badge +2 quando acertou
+    // Cor individual dos times (verde quando acertou)
     const corA = gabHasTeams ? (acertouA ? '#166534' : '#888') : '#555';
     const corB = gabHasTeams ? (acertouB ? '#166534' : '#888') : '#555';
     const bgA  = gabHasTeams ? (acertouA ? '#dcfce7' : 'transparent') : 'transparent';
     const bgB  = gabHasTeams ? (acertouB ? '#dcfce7' : 'transparent') : 'transparent';
-    const bonusA = acertouA ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
-    const bonusB = acertouB ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
 
-    // Cor do placar + badge +2 quando exato
+    // Cor do placar (verde quando exato)
     const corPlacar = placarExato ? '#166534' : (hasRes ? '#888' : '#555');
     const bgPlacar  = placarExato ? '#dcfce7' : 'transparent';
-    const bonusPlacar = placarExato ? ` <span style="font-size:8px;font-weight:700">+2</span>` : '';
 
-    // Bônus extra só quando bate o máximo (8 pts = ambos os times + placar exato)
-    const bonusMax = (hasRes && pts === 8) ? `<span style="font-size:9px;font-weight:700;color:#166534">Cravada +2</span>` : '';
+    // Selo quando bate o máximo (8 pts = ambos os times + placar exato)
+    const bonusMax = (hasRes && pts === 8) ? `<span style="font-size:9px;font-weight:700;color:#166534">Cravada</span>` : '';
 
     // Montar placar string
     let scoreStr = `${palp.golsA}–${palp.golsB}`;
@@ -2336,11 +2330,11 @@ function buildMMParticipantsGrid(id) {
     html += `<div class="acc-item ${cardCls}" style="min-width:0;gap:3px;padding:7px 8px">
       <span class="acc-nome">${n.split(' ')[0]}${totalCombinado!==null ? ` <span style="font-size:9px;font-weight:800;color:#166534">TT:${totalCombinado}</span>` : ''}</span>
       <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap;justify-content:center;margin-top:2px">
-        <span style="font-size:10px;font-weight:700;color:${corA};background:${bgA};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeA||'?'}${bonusA}</span>
+        <span style="font-size:10px;font-weight:700;color:${corA};background:${bgA};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeA||'?'}</span>
         <span style="font-size:9px;color:#bbb">×</span>
-        <span style="font-size:10px;font-weight:700;color:${corB};background:${bgB};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeB||'?'}${bonusB}</span>
+        <span style="font-size:10px;font-weight:700;color:${corB};background:${bgB};border-radius:3px;padding:1px 4px;white-space:nowrap">${palp.timeB||'?'}</span>
       </div>
-      <span style="font-size:12px;font-weight:700;color:${corPlacar};background:${bgPlacar};border-radius:4px;padding:1px 6px;margin-top:2px">${scoreStr}${bonusPlacar}</span>
+      <span style="font-size:12px;font-weight:700;color:${corPlacar};background:${bgPlacar};border-radius:4px;padding:1px 6px;margin-top:2px">${scoreStr}</span>
       ${bonusMax}
       ${formHtml}
     </div>`;
