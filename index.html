@@ -2095,21 +2095,27 @@ function calcMMScore(palp, gab) {
   const oneB = palpTimes[1] === gabTimes[1];
   const one = oneA || oneB;
 
+  // Bônus "acertou o lado" (venceu A, venceu B, ou empate), independente dos
+  // times — só entra no tier genérico de cada faixa (não soma em cima de
+  // placar exato/pênalti, que já são o teto daquela faixa).
+  const ladoGab  = gab.golsA === gab.golsB ? 'D' : (gab.golsA > gab.golsB ? 'A' : 'B');
+  const ladoPalp = palp.golsA === palp.golsB ? 'D' : (palp.golsA > palp.golsB ? 'A' : 'B');
+  const acertouLado = ladoGab === ladoPalp;
+
   if (both) {
     if (fullExact) return 8;
     if (exactScoreWrongPen) return 6;
-    if (guessedDrawOnly) return 5;
-    return 4;
+    return acertouLado ? 5 : 4;
   }
   if (one) {
     if (fullExact) return 4;
-    if (exactScoreWrongPen || guessedDrawOnly) return 3;
-    return 2;
+    if (exactScoreWrongPen) return 3;
+    return acertouLado ? 3 : 2;
   }
   // Nenhum time certo: vale acertar só o placar do tempo normal,
   // pênalti não precisa bater (já que os times nem são os do jogo real).
   if (exactScore) return 1;
-  return 0;
+  return acertouLado ? 1 : 0;
 }
 
 function scoreMMEspecial(name) {
