@@ -264,6 +264,7 @@
   .pal-cell.certo { color: #854d0e; background: #fef9c3; border-radius: 4px; padding: 1px 4px; }
   .pal-cell.errado { color: #ccc; }
   .pal-cell.sem-resultado { color: #bbb; }
+  .pal-cell.eliminado { color: #dc2626; text-decoration: line-through; text-decoration-color: #f87171; }
   .resultado-col { color: var(--verde-escuro); font-weight: 700; font-family: 'Oswald', sans-serif; font-size: 12px; }
 
   /* ===================== GRUPOS ===================== */
@@ -2262,6 +2263,22 @@ let PALPITES_ESPECIAIS = {
   "Alex":          {campeao:"França",        melhor:"Endrick",        artilheiro:"Endrick"}
 };
 
+// Times já eliminados da Copa (atualizar manualmente a cada rodada).
+// Usado só pra marcar em vermelho/riscado os palpites de CAMPEÃO que já
+// não podem mais acontecer.
+let TIMES_ELIMINADOS = ["Brasil", "França", "Alemanha", "Portugal"];
+
+// Jogadores fora de contenção pro prêmio de MELHOR JOGADOR (Bola de Ouro).
+// Aqui não é só "time eliminado" — é avaliação caso a caso (ex: Mbappé
+// segue fora mesmo com a França eliminada, porque ainda lidera a artilharia,
+// mas dificilmente leva a Bola de Ouro sem chegar na final).
+let JOGADORES_ELIMINADOS_MELHOR = ["Endrick", "Vinícius Jr.", "Cristiano Ronaldo", "Mbappé"];
+
+// Jogadores fora de contenção pro prêmio de ARTILHEIRO (Chuteira de Ouro).
+// Critério estatístico (saldo de gols), não time eliminado — por isso o
+// Mbappé NÃO entra aqui, mesmo com a França fora: ele ainda lidera a artilharia.
+let JOGADORES_ELIMINADOS_ARTILHEIRO = ["Endrick", "Vinícius Jr.", "Cristiano Ronaldo"];
+
 function normalizeStr(s) {
   if (!s) return '';
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -2302,8 +2319,11 @@ function renderMatamata() {
       <th class="jogo-col">Participante</th>
       <th>🏆 Campeão</th><th>⭐ Melhor Jogador</th><th>⚽ Artilheiro</th><th>Pts</th>
     </tr></thead><tbody>`;
-  const mkCell = (val,ok,hasReal) => {
-    if (!hasReal) return `<td class="pal-cell sem-resultado">${val}</td>`;
+  const mkCell = (val,ok,hasReal,eliminado) => {
+    if (!hasReal) {
+      if (eliminado) return `<td class="pal-cell eliminado" title="Fora de contenção">${val} ✗</td>`;
+      return `<td class="pal-cell sem-resultado">${val}</td>`;
+    }
     if (ok) return `<td class="pal-cell exato">${val} ✓</td>`;
     return `<td class="pal-cell errado">${val}</td>`;
   };
@@ -2312,19 +2332,25 @@ function renderMatamata() {
     const cOk = campeaoReal && normalizeStr(p.campeao)===normalizeStr(campeaoReal);
     const mOk = melhorReal && normalizeStr(p.melhor)===normalizeStr(melhorReal);
     const aOk = artilheiroReal && normalizeStr(p.artilheiro)===normalizeStr(artilheiroReal);
+    const cElim = !campeaoReal && TIMES_ELIMINADOS.some(t => normalizeStr(t)===normalizeStr(p.campeao));
+    const mElim = !melhorReal && JOGADORES_ELIMINADOS_MELHOR.some(j => normalizeStr(j)===normalizeStr(p.melhor));
+    const aElim = !artilheiroReal && JOGADORES_ELIMINADOS_ARTILHEIRO.some(j => normalizeStr(j)===normalizeStr(p.artilheiro));
     let pts=0; if(cOk)pts+=20; if(mOk)pts+=10; if(aOk)pts+=10;
-    return {n,p,cOk,mOk,aOk,pts};
+    return {n,p,cOk,mOk,aOk,cElim,mElim,aElim,pts};
   }).sort((a,b)=>b.pts-a.pts);
-  espRows.forEach(({n,p,cOk,mOk,aOk,pts}) => {
+  espRows.forEach(({n,p,cOk,mOk,aOk,cElim,mElim,aElim,pts}) => {
     html += `<tr>
       <td class="jogo-col">${n}</td>
-      ${mkCell(p.campeao,cOk,!!campeaoReal)}
-      ${mkCell(p.melhor,mOk,!!melhorReal)}
-      ${mkCell(p.artilheiro,aOk,!!artilheiroReal)}
+      ${mkCell(p.campeao,cOk,!!campeaoReal,cElim)}
+      ${mkCell(p.melhor,mOk,!!melhorReal,mElim)}
+      ${mkCell(p.artilheiro,aOk,!!artilheiroReal,aElim)}
       <td class="rank-stat" style="font-weight:700;color:${pts>0?'#166534':'#ccc'}">${pts>0?'+'+pts:'—'}</td>
     </tr>`;
   });
   html += `</tbody></table></div>`;
+  html += `<div style="margin-top:10px;padding:10px 14px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;font-size:12px;color:var(--muted)">
+    🔴 Riscado = já não é mais possível (time eliminado, no caso do Campeão; ou fora de chance real, no caso de Melhor Jogador/Artilheiro)
+  </div>`;
 
   container.innerHTML = html;
 }
