@@ -1225,26 +1225,35 @@ function renderRanking() {
   const scores = PARTICIPANTES.map(n => ({name: n, ...scoreFor(n)}));
   scores.sort((a,b) => b.total - a.total || b.exatos - a.exatos);
 
+  // Premiação: se 1º e 2º empatarem no total, divide os R$700 (600+100) igualmente.
+  const PREMIO_1_PADRAO = 600, PREMIO_2_PADRAO = 100;
+  const PREMIO_TOTAL = PREMIO_1_PADRAO + PREMIO_2_PADRAO;
+  const empate1e2 = scores.length > 1 && scores[0].total === scores[1].total;
+  const premio1 = empate1e2 ? PREMIO_TOTAL / 2 : PREMIO_1_PADRAO;
+  const premio2 = empate1e2 ? PREMIO_TOTAL / 2 : PREMIO_2_PADRAO;
+  const fmtR = v => 'R$ ' + (Number.isInteger(v) ? v : v.toFixed(2).replace('.', ','));
+
   // Card de premiação
   let html = `<div style="background:var(--verde-escuro);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px">
-    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:var(--amarelo);letter-spacing:0.5px;margin-bottom:10px">💰 PREMIAÇÃO</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:var(--amarelo);letter-spacing:0.5px;margin-bottom:10px">💰 PREMIAÇÃO${empate1e2 ? ' · EMPATE 1º/2º' : ''}</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
       <div style="background:rgba(245,212,66,0.15);border:1px solid rgba(245,212,66,0.35);border-radius:8px;padding:8px 6px;text-align:center">
         <div style="font-size:16px;margin-bottom:2px">🥇</div>
         <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">1º lugar</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:var(--amarelo);line-height:1.3">R$ 600</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:var(--amarelo);line-height:1.3">${fmtR(premio1)}</div>
       </div>
       <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 6px;text-align:center">
         <div style="font-size:16px;margin-bottom:2px">🥈</div>
         <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">2º lugar</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#e0e0e0;line-height:1.3">R$ 100</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#e0e0e0;line-height:1.3">${fmtR(premio2)}</div>
       </div>
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 6px;text-align:center">
         <div style="font-size:16px;margin-bottom:2px">🏦</div>
         <div style="font-size:8px;font-weight:700;color:#9fd9a8;text-transform:uppercase;letter-spacing:0.3px">Total</div>
-        <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#fff;line-height:1.3">R$ 700</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:#fff;line-height:1.3">${fmtR(PREMIO_TOTAL)}</div>
       </div>
     </div>
+    ${empate1e2 ? `<div style="font-size:9px;color:#9fd9a8;margin-top:8px;text-align:center">🤝 1º e 2º empataram em ${scores[0].total} pts — prêmio dividido igualmente</div>` : ''}
   </div>`;
 
   scores.forEach((s, i) => {
@@ -1263,9 +1272,9 @@ function renderRanking() {
     const posCls = i===0?'p1':i===1?'p2':i===2?'p3':'pn';
     const totalCls = i===0?'rank-total leader':'rank-total';
     const premioBadge = i===0
-      ? `<span style="font-size:10px;font-weight:700;color:#7c2d12;background:#fbbf24;border-radius:5px;padding:2px 7px;margin-left:4px;font-family:'Oswald',sans-serif;white-space:nowrap">R$ 600</span>`
+      ? `<span style="font-size:10px;font-weight:700;color:#7c2d12;background:#fbbf24;border-radius:5px;padding:2px 7px;margin-left:4px;font-family:'Oswald',sans-serif;white-space:nowrap">${fmtR(premio1)}</span>`
       : i===1
-      ? `<span style="font-size:10px;font-weight:700;color:#374151;background:#e5e7eb;border-radius:5px;padding:2px 7px;margin-left:4px;font-family:'Oswald',sans-serif;white-space:nowrap">R$ 100</span>`
+      ? `<span style="font-size:10px;font-weight:700;color:#374151;background:#e5e7eb;border-radius:5px;padding:2px 7px;margin-left:4px;font-family:'Oswald',sans-serif;white-space:nowrap">${fmtR(premio2)}</span>`
       : '';
     html += `<div class="ranking-row ${cls}">
       <div class="pos-badge ${posCls}">${i+1}</div>
