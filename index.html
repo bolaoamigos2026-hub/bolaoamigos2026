@@ -200,7 +200,7 @@
   }
   .ranking-header {
     display: grid;
-    grid-template-columns: 38px 1fr 44px 44px 52px 52px;
+    grid-template-columns: 38px 1fr 44px 44px 52px 52px 52px;
     gap: 4px; padding: 6px 12px;
     font-size: 9px; font-weight: 700; color: var(--muted);
     text-transform: uppercase; letter-spacing: 0.3px;
@@ -209,7 +209,7 @@
   .ranking-row {
     background: var(--card-bg); border: 1px solid var(--border);
     border-radius: var(--radius);
-    display: grid; grid-template-columns: 38px 1fr 44px 44px 52px 52px;
+    display: grid; grid-template-columns: 38px 1fr 44px 44px 52px 52px 52px;
     gap: 4px; padding: 8px 12px; margin-bottom: 4px;
     align-items: center; transition: box-shadow 0.15s;
     box-shadow: var(--shadow);
@@ -543,7 +543,7 @@
     .main { padding: 10px 10px; }
     .tabs { padding: 0 10px; }
     .tab { font-size: 11px; padding: 9px 10px 7px; }
-    .ranking-header, .ranking-row { grid-template-columns: 32px 1fr 40px 40px 44px 44px; gap: 3px; padding-left: 8px; padding-right: 8px; }
+    .ranking-header, .ranking-row { grid-template-columns: 32px 1fr 40px 40px 44px 44px 44px; gap: 3px; padding-left: 8px; padding-right: 8px; }
     .ranking-header { font-size: 8px; }
     .rank-nome { font-size: 11px; }
     .rank-stat { font-size: 10px; }
@@ -855,7 +855,9 @@ function translateTeam(name) { return ESPN_TEAM_MAP[name] || name; }
 // ============================================================
 // STATE
 // ============================================================
-let STATE = { resultados: {}, grupos: {}, matamata: {}, gabarito_mm: {}, central: null, centralDay: null };
+// Especiais (Campeão/Melhor Jogador/Artilheiro) fixados direto aqui —
+// não depende mais do resultados.json. Atualizar manualmente quando sair.
+let STATE = { resultados: {}, grupos: {}, matamata: {campeao:"Espanha", melhorJogador:"Rodri", artilheiro:"Mbappé"}, gabarito_mm: {}, central: null, centralDay: null };
 let centralInterval = null;
 let centralSection = 'hoje';
 
@@ -900,8 +902,9 @@ async function loadState() {
     const r = await fetch('resultados.json?t=' + Date.now());
     if (r.ok) {
       const data = await r.json();
-      STATE.grupos   = data.grupos   || {};
-      STATE.matamata = data.matamata || {};
+      STATE.grupos = data.grupos || {};
+      // matamata (Especiais) agora é fixo no código acima — resultados.json
+      // não sobrescreve mais, pra não precisar subir 2 arquivos toda vez.
     }
   } catch(e) {}
 
@@ -981,6 +984,19 @@ function calcPoints(palp, res) {
 }
 
 
+function scoreEspeciais(name) {
+  const mm = STATE.matamata || {};
+  const campeaoReal = mm.campeao || '';
+  const melhorReal = mm.melhorJogador || '';
+  const artilheiroReal = mm.artilheiro || '';
+  const p = PALPITES_ESPECIAIS[name];
+  if (!p) return 0;
+  let pts = 0;
+  if (campeaoReal && normalizeStr(p.campeao) === normalizeStr(campeaoReal)) pts += 20;
+  if (melhorReal && normalizeStr(p.melhor) === normalizeStr(melhorReal)) pts += 10;
+  if (artilheiroReal && normalizeStr(p.artilheiro) === normalizeStr(artilheiroReal)) pts += 10;
+  return pts;
+}
 function scoreFor(name) {
   let ptsJogos = 0, exatos = 0, certos = 0, jogosComResultado = 0;
   for (let i = 0; i < 72; i++) {
@@ -1004,8 +1020,9 @@ function scoreFor(name) {
     const mmPts = calcMMScore(palp, gab);
     ptsForm += capFormBonus(mmPts, calcFormScoreFor(name, palp.id, palp, gab));
   });
-  const total = ptsJogos + ptsMM + ptsForm;
-  return {total, exatos, certos, jogosComResultado, ptsJogos, ptsMM, ptsForm};
+  const ptsEsp = scoreEspeciais(name);
+  const total = ptsJogos + ptsMM + ptsForm + ptsEsp;
+  return {total, exatos, certos, jogosComResultado, ptsJogos, ptsMM, ptsForm, ptsEsp};
 }
 function fmtDate(d) {
   const dt = new Date(d + 'T12:00:00');
@@ -1222,6 +1239,7 @@ function renderRanking() {
         <div style="text-align:center">Fase de Grupos</div>
         <div style="text-align:center">Mata-Mata</div>
         <div style="text-align:center">Novo Palpite</div>
+        <div style="text-align:center">Especiais</div>
       </div>`;
     }
     const cls = i===0?'top1':i===1?'top2':i===2?'top3':'';
@@ -1239,6 +1257,7 @@ function renderRanking() {
       <div class="rank-stat">${s.ptsJogos}</div>
       <div class="rank-stat">${s.ptsMM}</div>
       <div class="rank-stat" style="color:${s.ptsForm>0?'#b45309':'var(--muted)'};font-weight:${s.ptsForm>0?'700':'600'}">${s.ptsForm>0?'+'+s.ptsForm:'—'}</div>
+      <div class="rank-stat" style="color:${s.ptsEsp>0?'#166534':'var(--muted)'};font-weight:${s.ptsEsp>0?'700':'600'}">${s.ptsEsp>0?'+'+s.ptsEsp:'—'}</div>
     </div>`;
   });
   document.getElementById('ranking-container').innerHTML = html;
@@ -2269,9 +2288,9 @@ function scoreMM(name) {
     const pts = calcMMScore(palp, gab);
     if (pts !== null) { total += pts; jogos++; }
   });
-  // bônus de campeão/vice, independente do placar da final
-  const esp = scoreMMEspecial(name);
-  total += esp.campeao + esp.vice;
+  // Bônus de campeão/vice NÃO entra mais automático no ranking principal —
+  // Campeão/Vice/Melhor/Artilheiro agora são só na aba Especiais, sempre
+  // com valor definido manualmente (mm.campeao/mm.melhorJogador/mm.artilheiro).
   return {total, jogos};
 }
 
@@ -2296,18 +2315,18 @@ let PALPITES_ESPECIAIS = {
 // Times já eliminados da Copa (atualizar manualmente a cada rodada).
 // Usado só pra marcar em vermelho/riscado os palpites de CAMPEÃO que já
 // não podem mais acontecer.
-let TIMES_ELIMINADOS = ["Brasil", "França", "Alemanha", "Portugal"];
+let TIMES_ELIMINADOS = ["Brasil", "França", "Alemanha", "Portugal", "Inglaterra"];
 
 // Jogadores fora de contenção pro prêmio de MELHOR JOGADOR (Bola de Ouro).
 // Aqui não é só "time eliminado" — é avaliação caso a caso (ex: Mbappé
 // segue fora mesmo com a França eliminada, porque ainda lidera a artilharia,
 // mas dificilmente leva a Bola de Ouro sem chegar na final).
-let JOGADORES_ELIMINADOS_MELHOR = ["Endrick", "Vinícius Jr.", "Cristiano Ronaldo", "Mbappé"];
+let JOGADORES_ELIMINADOS_MELHOR = ["Endrick", "Vinícius Jr.", "Cristiano Ronaldo", "Mbappé", "Kane", "Harry Kane"];
 
 // Jogadores fora de contenção pro prêmio de ARTILHEIRO (Chuteira de Ouro).
 // Critério estatístico (saldo de gols), não time eliminado — por isso o
 // Mbappé NÃO entra aqui, mesmo com a França fora: ele ainda lidera a artilharia.
-let JOGADORES_ELIMINADOS_ARTILHEIRO = ["Endrick", "Vinícius Jr.", "Cristiano Ronaldo"];
+let JOGADORES_ELIMINADOS_ARTILHEIRO = ["Endrick", "Vinícius Jr.", "Cristiano Ronaldo", "Kane", "Harry Kane", "Yamal"];
 
 function normalizeStr(s) {
   if (!s) return '';
@@ -2355,7 +2374,7 @@ function renderMatamata() {
       return `<td class="pal-cell sem-resultado">${val}</td>`;
     }
     if (ok) return `<td class="pal-cell exato">${val} ✓</td>`;
-    return `<td class="pal-cell errado">${val}</td>`;
+    return `<td class="pal-cell eliminado">${val} ✗</td>`;
   };
   const espRows = PARTICIPANTES.map(n => {
     const p = PALPITES_ESPECIAIS[n];
