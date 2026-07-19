@@ -857,7 +857,7 @@ function translateTeam(name) { return ESPN_TEAM_MAP[name] || name; }
 // ============================================================
 // Especiais (Campeão/Melhor Jogador/Artilheiro) fixados direto aqui —
 // não depende mais do resultados.json. Atualizar manualmente quando sair.
-let STATE = { resultados: {}, grupos: {}, matamata: {campeao:"Espanha", melhorJogador:"Rodri", artilheiro:"Mbappé"}, gabarito_mm: {}, central: null, centralDay: null };
+let STATE = { resultados: {}, grupos: {}, matamata: {campeao:"Espanha", vice:"Argentina", melhorJogador:"Rodri", artilheiro:"Mbappé"}, gabarito_mm: {}, central: null, centralDay: null };
 let centralInterval = null;
 let centralSection = 'hoje';
 
@@ -984,15 +984,32 @@ function calcPoints(palp, res) {
 }
 
 
+function bracketVice(name) {
+  // Vice = quem o participante chutou como PERDEDOR da Final no bracket (PALPITES_MM).
+  const entries = PALPITES_MM[name] || [];
+  const p104 = entries.find(e => e.id === 104);
+  if (!p104) return null;
+  function winner(g) {
+    if (g.golsA > g.golsB) return g.timeA;
+    if (g.golsB > g.golsA) return g.timeB;
+    if (g.penaltisA !== null && g.penaltisA !== undefined) return g.penaltisA > g.penaltisB ? g.timeA : g.timeB;
+    return null;
+  }
+  const w = winner(p104);
+  if (!w) return null;
+  return (w === p104.timeA ? p104.timeB : p104.timeA).trim();
+}
 function scoreEspeciais(name) {
   const mm = STATE.matamata || {};
   const campeaoReal = mm.campeao || '';
+  const viceReal = mm.vice || '';
   const melhorReal = mm.melhorJogador || '';
   const artilheiroReal = mm.artilheiro || '';
   const p = PALPITES_ESPECIAIS[name];
   if (!p) return 0;
   let pts = 0;
   if (campeaoReal && normalizeStr(p.campeao) === normalizeStr(campeaoReal)) pts += 20;
+  if (viceReal && normalizeStr(bracketVice(name)) === normalizeStr(viceReal)) pts += 15;
   if (melhorReal && normalizeStr(p.melhor) === normalizeStr(melhorReal)) pts += 10;
   if (artilheiroReal && normalizeStr(p.artilheiro) === normalizeStr(artilheiroReal)) pts += 10;
   return pts;
